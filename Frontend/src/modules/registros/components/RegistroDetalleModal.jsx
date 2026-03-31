@@ -45,7 +45,7 @@ const RegistroDetalleModal = ({ isOpen, onClose, registro, onEditar }) => {
       title="Detalle del Registro"
       size="lg"
       footer={
-        <div className="flex justify-end space-x-3">
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={onClose}>
             Cerrar
           </Button>
@@ -64,7 +64,7 @@ const RegistroDetalleModal = ({ isOpen, onClose, registro, onEditar }) => {
     >
       <div className="space-y-6">
         {/* Header con tipo */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Badge variant={tipoConfig.variant} size="md" icon={TipoIcon}>
             {tipoConfig.label}
           </Badge>
@@ -79,7 +79,7 @@ const RegistroDetalleModal = ({ isOpen, onClose, registro, onEditar }) => {
             <User size={16} className="mr-2" />
             Empleado
           </h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <p className="text-xs text-gray-500">Nombre</p>
               <p className="text-sm font-medium text-gray-900">
@@ -133,7 +133,7 @@ const RegistroDetalleModal = ({ isOpen, onClose, registro, onEditar }) => {
           <h3 className="text-sm font-medium text-gray-700 mb-3">
             Horas Extras Calculadas
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <div className="text-center">
               <p className="text-xs text-gray-500">HE 35%</p>
               <p className="text-lg font-semibold text-blue-600">
@@ -167,7 +167,7 @@ const RegistroDetalleModal = ({ isOpen, onClose, registro, onEditar }) => {
             <h3 className="text-sm font-medium text-purple-700 mb-2">
               Monto a Pagar
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div>
                 <p className="text-xs text-purple-600">35%</p>
                 <p className="text-sm font-medium text-gray-900">
@@ -193,7 +193,7 @@ const RegistroDetalleModal = ({ isOpen, onClose, registro, onEditar }) => {
                 </p>
               </div>
             </div>
-            <div className="mt-2 pt-2 border-t border-purple-200 flex justify-between">
+            <div className="mt-2 flex flex-col gap-1 border-t border-purple-200 pt-2 sm:flex-row sm:items-center sm:justify-between">
               <span className="text-sm font-medium text-purple-700">Total</span>
               <span className="text-lg font-bold text-purple-700">
                 {formatearMoneda(registro.totalPagar)}

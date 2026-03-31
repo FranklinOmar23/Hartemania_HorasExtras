@@ -122,7 +122,7 @@ const RegistroManualForm = ({
   // ========================================
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Tipo</p>
           <p className="mt-2 text-base font-semibold text-slate-900">Registro manual</p>
@@ -231,7 +231,7 @@ const RegistroManualForm = ({
           <h4 className="text-sm font-medium text-blue-800 mb-2">
             Vista previa del cálculo
           </h4>
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 sm:gap-4">
             <div>
               <span className="text-blue-600">Horas trabajadas:</span>
               <span className="ml-2 font-medium text-blue-800">
@@ -268,13 +268,14 @@ const RegistroManualForm = ({
       <input type="hidden" {...register('tipoRegistro')} value="MANUAL" />
 
       {/* Botones de acción */}
-      <div className="flex justify-end space-x-3 border-t border-slate-200 pt-4">
+      <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:justify-end">
         <Button
           type="button"
           variant="outline"
           onClick={onCancel}
           icon={X}
           disabled={loading}
+          className="w-full sm:w-auto"
         >
           Cancelar
         </Button>
@@ -283,6 +284,7 @@ const RegistroManualForm = ({
           variant="primary"
           loading={loading}
           icon={Save}
+          className="w-full sm:w-auto"
         >
           {isEditing ? 'Actualizar' : 'Guardar'} Registro
         </Button>

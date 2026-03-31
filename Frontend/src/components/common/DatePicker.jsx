@@ -25,6 +25,7 @@ const DatePicker = ({
   const [isOpen, setIsOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(value ? new Date(value) : new Date());
   const [inputValue, setInputValue] = useState(value ? format(value, dateFormat) : '');
+  const [calendarPosition, setCalendarPosition] = useState('left');
   const containerRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -50,6 +51,27 @@ const DatePicker = ({
       setInputValue('');
     }
   }, [value, dateFormat]);
+
+  useEffect(() => {
+    if (!isOpen || !containerRef.current) return;
+
+    const updateCalendarPosition = () => {
+      const bounds = containerRef.current.getBoundingClientRect();
+      const estimatedCalendarWidth = Math.min(window.innerWidth * 0.9, window.innerWidth >= 640 ? 320 : 288);
+
+      if (bounds.left + estimatedCalendarWidth > window.innerWidth - 16) {
+        setCalendarPosition('right');
+        return;
+      }
+
+      setCalendarPosition('left');
+    };
+
+    updateCalendarPosition();
+    window.addEventListener('resize', updateCalendarPosition);
+
+    return () => window.removeEventListener('resize', updateCalendarPosition);
+  }, [isOpen]);
 
   // ========================================
   // FUNCIONES DEL CALENDARIO
@@ -109,9 +131,13 @@ const DatePicker = ({
 
       {/* Calendario */}
       {isOpen && !disabled && (
-        <div className="absolute z-50 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 p-4 w-64">
+        <div
+          className={`absolute z-50 mt-1 w-[min(90vw,18rem)] rounded-2xl border border-gray-200 bg-white p-3 shadow-lg sm:w-80 sm:p-4 ${
+            calendarPosition === 'right' ? 'right-0' : 'left-0'
+          }`}
+        >
           {/* Header del calendario */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4 flex items-center justify-between gap-2">
             <button
               type="button"
               onClick={prevMonth}
@@ -119,7 +145,7 @@ const DatePicker = ({
             >
               <ChevronLeft size={18} />
             </button>
-            <span className="font-medium">
+            <span className="text-center text-sm font-medium sm:text-base">
               {format(currentMonth, 'MMMM yyyy', { locale: es })}
             </span>
             <button
@@ -132,9 +158,9 @@ const DatePicker = ({
           </div>
 
           {/* Días de la semana */}
-          <div className="grid grid-cols-7 gap-1 mb-2">
+          <div className="mb-2 grid grid-cols-7 gap-1">
             {['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'].map((day) => (
-              <div key={day} className="text-center text-xs font-medium text-gray-500">
+              <div key={day} className="text-center text-[11px] font-medium text-gray-500 sm:text-xs">
                 {day}
               </div>
             ))}
@@ -155,7 +181,7 @@ const DatePicker = ({
                   onClick={() => !isDisabled && handleDateSelect(date)}
                   disabled={isDisabled || !isCurrentMonth}
                   className={`
-                    p-2 text-sm rounded-full transition-colors
+                    flex h-9 items-center justify-center rounded-full text-sm transition-colors sm:h-10
                     ${!isCurrentMonth && 'text-gray-300'}
                     ${isSelected ? 'bg-blue-600 text-white hover:bg-blue-700' : 'hover:bg-gray-100'}
                     ${isToday_ && !isSelected && 'border border-blue-300'}
@@ -169,7 +195,7 @@ const DatePicker = ({
           </div>
 
           {/* Footer */}
-          <div className="mt-3 pt-3 border-t border-gray-200 flex justify-between">
+          <div className="mt-3 flex items-center justify-between border-t border-gray-200 pt-3">
             <button
               type="button"
               onClick={() => handleDateSelect(new Date())}
@@ -208,7 +234,7 @@ export const RangePicker = ({
   ...props
 }) => {
   return (
-    <div className="flex space-x-4">
+    <div className="grid gap-4 sm:grid-cols-2">
       <DatePicker
         label={labelStart}
         value={startDate}

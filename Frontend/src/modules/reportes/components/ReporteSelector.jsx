@@ -67,7 +67,7 @@ const ReporteSelector = ({ tipo, onGenerar, loading }) => {
   // RENDER SEGÚN TIPO
   // ========================================
   const renderQuincenal = () => (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <Select
         label="Año"
         value={parametros.anio}
@@ -90,7 +90,7 @@ const ReporteSelector = ({ tipo, onGenerar, loading }) => {
   );
 
   const renderEmpleado = () => (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
       <Select
         label="Año"
         value={parametros.anio}
@@ -120,7 +120,7 @@ const ReporteSelector = ({ tipo, onGenerar, loading }) => {
   );
 
   const renderComparativo = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Año
@@ -131,7 +131,7 @@ const ReporteSelector = ({ tipo, onGenerar, loading }) => {
           options={años}
         />
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Input
           label="Fecha inicio"
           type="date"
@@ -164,6 +164,7 @@ const ReporteSelector = ({ tipo, onGenerar, loading }) => {
           loading={loading}
           icon={Calendar}
           size="lg"
+          className="w-full sm:w-auto"
         >
           Generar Reporte
         </Button>

@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 import Button from './Button';
 
@@ -24,11 +24,11 @@ const Modal = ({
   // TAMAÑOS
   // ========================================
   const sizes = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
-    full: 'max-w-full mx-4'
+    sm: 'max-w-sm sm:max-w-md',
+    md: 'max-w-md sm:max-w-lg',
+    lg: 'max-w-lg sm:max-w-2xl',
+    xl: 'max-w-2xl sm:max-w-4xl',
+    full: 'max-w-full mx-2 sm:mx-4'
   };
 
   // ========================================
@@ -78,18 +78,18 @@ const Modal = ({
       <div className="fixed inset-0 bg-slate-950/45 backdrop-blur-sm transition-opacity" />
 
       {/* Modal */}
-      <div className="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
+      <div className="flex min-h-screen items-end justify-center p-2 text-center sm:items-center sm:p-4">
         <div
-          className={`relative w-full overflow-hidden rounded-[28px] border border-white/70 bg-white text-left shadow-2xl shadow-slate-900/15 transition-all sm:my-8 ${sizes[size]} ${className}`}
+          className={`relative my-2 w-full overflow-hidden rounded-[24px] border border-white/70 bg-white text-left shadow-2xl shadow-slate-900/15 transition-all sm:my-8 sm:rounded-[28px] ${sizes[size]} ${className}`}
           {...props}
         >
           <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-r from-amber-100 via-white to-emerald-100 opacity-80" />
 
           {/* Header */}
           {(title || showCloseButton) && (
-            <div className="relative flex items-center justify-between border-b border-slate-100 bg-white/90 px-4 py-4 sm:px-6">
+            <div className="relative flex items-center justify-between gap-3 border-b border-slate-100 bg-white/90 px-4 py-4 sm:px-6">
               {title && (
-                <h3 className="text-lg font-semibold leading-6 text-slate-900" id="modal-title">
+                <h3 className="pr-2 text-base font-semibold leading-6 text-slate-900 sm:text-lg" id="modal-title">
                   {title}
                 </h3>
               )}
@@ -107,7 +107,7 @@ const Modal = ({
           )}
 
           {/* Content */}
-          <div className="relative bg-white px-4 py-5 sm:p-6">
+          <div className="relative bg-white px-4 py-4 sm:p-6">
             {children}
           </div>
 
@@ -145,7 +145,7 @@ export const ConfirmModal = ({
       title={title}
       size={size}
       footer={
-        <div className="flex justify-end space-x-3">
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Button
             variant="outline"
             onClick={onClose}

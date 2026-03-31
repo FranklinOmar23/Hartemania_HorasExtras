@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Menu, Bell, User, Settings, LogOut } from 'lucide-react';
 import { useUIStore } from '../../store';
@@ -12,6 +12,8 @@ const Navbar = ({ onMenuClick, sidebarOpen }) => {
   const location = useLocation();
   const [showUserMenu, setShowUserMenu] = React.useState(false);
   const [showNotifications, setShowNotifications] = React.useState(false);
+  const notificationsRef = useRef(null);
+  const userMenuRef = useRef(null);
   
   // Obtener título de la página según la ruta
   const getPageTitle = () => {
@@ -37,11 +39,29 @@ const Navbar = ({ onMenuClick, sidebarOpen }) => {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
+
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
-    <nav className="sticky top-0 z-30 border-b border-white/70 bg-white/75 px-4 py-3 backdrop-blur-xl">
-      <div className="flex items-center justify-between">
+    <nav className="sticky top-0 z-30 border-b border-white/70 bg-white/75 px-4 py-3 backdrop-blur-xl sm:px-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap">
         {/* Izquierda */}
-        <div className="flex items-center">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <button
             onClick={onMenuClick}
             className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
@@ -49,8 +69,8 @@ const Navbar = ({ onMenuClick, sidebarOpen }) => {
             <Menu size={24} />
           </button>
           
-          <div className="ml-2 lg:ml-0">
-            <h1 className="text-xl font-semibold text-slate-900">
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-semibold text-slate-900 sm:text-xl">
               {getPageTitle()}
             </h1>
             <p className="hidden text-xs uppercase tracking-[0.22em] text-slate-400 md:block">
@@ -60,13 +80,13 @@ const Navbar = ({ onMenuClick, sidebarOpen }) => {
         </div>
 
         {/* Derecha */}
-        <div className="flex items-center space-x-4">
+        <div className="ml-auto flex items-center gap-2 sm:gap-4">
           <div className="hidden rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 md:block">
             Operacion en vivo
           </div>
 
           {/* Notificaciones */}
-          <div className="relative">
+          <div ref={notificationsRef} className="relative">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="relative rounded-full border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
@@ -81,7 +101,7 @@ const Navbar = ({ onMenuClick, sidebarOpen }) => {
 
             {/* Dropdown notificaciones */}
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-slate-200 bg-white/95 shadow-2xl shadow-slate-900/10 z-50 backdrop-blur">
+              <div className="absolute right-0 mt-2 w-[min(92vw,20rem)] sm:w-80 rounded-2xl border border-slate-200 bg-white/95 shadow-2xl shadow-slate-900/10 z-50 backdrop-blur">
                 <div className="py-2">
                   <div className="border-b border-slate-100 px-4 py-3">
                     <h3 className="text-sm font-semibold text-slate-900">
@@ -118,7 +138,7 @@ const Navbar = ({ onMenuClick, sidebarOpen }) => {
           </div>
 
           {/* Menú de usuario */}
-          <div className="relative">
+          <div ref={userMenuRef} className="relative">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
               className="flex items-center space-x-2 rounded-2xl border border-slate-200 bg-white px-2 py-1.5 transition hover:border-slate-300 hover:bg-slate-50"
@@ -133,7 +153,7 @@ const Navbar = ({ onMenuClick, sidebarOpen }) => {
 
             {/* Dropdown usuario */}
             {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-48 rounded-2xl border border-slate-200 bg-white/95 shadow-2xl shadow-slate-900/10 z-50 backdrop-blur">
+              <div className="absolute right-0 mt-2 w-[min(84vw,14rem)] sm:w-56 rounded-2xl border border-slate-200 bg-white/95 shadow-2xl shadow-slate-900/10 z-50 backdrop-blur">
                 <div className="py-1">
                   <a
                     href="/perfil"

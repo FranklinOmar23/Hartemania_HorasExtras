@@ -104,14 +104,14 @@ const Table = ({
   // ========================================
   return (
     <div className="w-full">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-2xl border border-gray-200">
         <table className={`min-w-full divide-y divide-gray-200 ${className}`}>
           {/* HEADER */}
           <thead className="bg-gray-50">
             <tr>
               {/* Checkbox de selección */}
               {selectable && (
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                <th scope="col" className="w-10 px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 sm:px-4 lg:px-6">
                   <input
                     type="checkbox"
                     checked={isAllSelected}
@@ -126,13 +126,13 @@ const Table = ({
                 <th
                   key={column.key}
                   scope="col"
-                  className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                  className={`px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 sm:px-4 lg:px-6 ${
                     column.sortable ? 'cursor-pointer hover:bg-gray-100' : ''
                   } ${column.className || ''}`}
                   onClick={() => handleSort(column)}
                   style={{ width: column.width }}
                 >
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-1 whitespace-nowrap">
                     {column.label}
                     {getSortIcon(column)}
                   </div>
@@ -145,13 +145,13 @@ const Table = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {loading ? (
               <tr>
-                <td colSpan={columns.length + (selectable ? 1 : 0)} className="px-6 py-20 text-center">
+                <td colSpan={columns.length + (selectable ? 1 : 0)} className="px-4 py-20 text-center sm:px-6">
                   <Spinner size="lg" />
                 </td>
               </tr>
             ) : data.length === 0 ? (
               <tr>
-                <td colSpan={columns.length + (selectable ? 1 : 0)} className="px-6 py-10 text-center text-gray-500">
+                <td colSpan={columns.length + (selectable ? 1 : 0)} className="px-4 py-10 text-center text-gray-500 sm:px-6">
                   {emptyMessage}
                 </td>
               </tr>
@@ -170,7 +170,7 @@ const Table = ({
                   >
                     {/* Checkbox de fila */}
                     {selectable && (
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="whitespace-nowrap px-3 py-4 sm:px-4 lg:px-6">
                         <input
                           type="checkbox"
                           checked={isSelected}
@@ -185,7 +185,7 @@ const Table = ({
                     {columns.map((column) => (
                       <td
                         key={`${rowId}-${column.key}`}
-                        className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${column.cellClassName || ''}`}
+                        className={`px-3 py-4 text-sm text-gray-900 sm:px-4 lg:px-6 ${column.cellClassName || 'whitespace-nowrap'}`}
                       >
                         {column.render
                           ? column.render(row[column.key], row, rowIndex)
@@ -222,13 +222,13 @@ const Table = ({
 // ============================================
 
 export const TableCell = ({ children, className = '' }) => (
-  <td className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${className}`}>
+  <td className={`px-3 py-4 text-sm text-gray-900 sm:px-4 lg:px-6 ${className || 'whitespace-nowrap'}`}>
     {children}
   </td>
 );
 
 export const TableHeader = ({ children, className = '' }) => (
-  <th className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${className}`}>
+  <th className={`px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 sm:px-4 lg:px-6 ${className}`}>
     {children}
   </th>
 );

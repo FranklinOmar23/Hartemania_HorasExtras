@@ -87,13 +87,14 @@ const RegistroManualPage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="rounded-[30px] border border-slate-200 bg-gradient-to-r from-white via-white to-amber-50 px-6 py-6 shadow-sm">
+      <div className="rounded-[30px] border border-slate-200 bg-gradient-to-r from-white via-white to-amber-50 px-4 py-5 shadow-sm sm:px-6 sm:py-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             <Button
               variant="ghost"
               onClick={handleCancel}
               icon={ArrowLeft}
+              className="w-full sm:w-auto"
             >
               Volver
             </Button>
@@ -110,7 +111,7 @@ const RegistroManualPage = () => {
             </div>
           </div>
 
-          <div className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
+          <div className="w-fit rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
             Registro manual supervisado
           </div>
         </div>

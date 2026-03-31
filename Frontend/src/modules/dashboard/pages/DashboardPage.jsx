@@ -39,11 +39,11 @@ const MonthYearSelector = ({ value, onChange }) => {
   };
 
   return (
-    <div className="flex items-center space-x-2 bg-white border border-gray-300 rounded-lg px-3 py-2">
+    <div className="flex w-full items-center justify-between gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 sm:w-auto sm:justify-normal">
       <button type="button" onClick={prev} className="p-1 hover:bg-gray-100 rounded">
         <ChevronLeft size={16} />
       </button>
-      <span className="text-sm font-medium text-gray-700 min-w-[140px] text-center">
+      <span className="min-w-0 flex-1 text-center text-sm font-medium text-gray-700 sm:min-w-[140px] sm:flex-none">
         {MESES[mes]} {anio}
       </span>
       <button type="button" onClick={next} className="p-1 hover:bg-gray-100 rounded">
@@ -123,7 +123,7 @@ const DashboardPage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-500 mt-1">
@@ -136,7 +136,7 @@ const DashboardPage = () => {
           )}
         </div>
 
-        <div className="flex items-center space-x-3 w-full md:w-auto">
+        <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap lg:w-auto lg:flex-nowrap">
           {/* Selector de mes */}
           <MonthYearSelector
             value={selectedMonth}
@@ -149,6 +149,7 @@ const DashboardPage = () => {
             onClick={handleRefresh}
             loading={refreshing}
             icon={RefreshCw}
+            className="w-full sm:w-auto"
           >
             Actualizar
           </Button>
@@ -158,6 +159,7 @@ const DashboardPage = () => {
             variant="primary"
             onClick={handleVerReporteCompleto}
             icon={Download}
+            className="w-full sm:w-auto"
           >
             Reporte Completo
           </Button>
@@ -199,9 +201,9 @@ const DashboardPage = () => {
           )}
 
           {/* Gráficos y tablas en grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
             {/* Gráfico de horas extras (ocupa 2 columnas en lg) */}
-            <div className="lg:col-span-2">
+            <div className="md:col-span-2 lg:col-span-2">
               <HorasExtrasChart 
                 data={data.horasPorTipo}
                 loading={loading}

@@ -33,7 +33,7 @@ const CalculoDetallePage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <button
           onClick={() => navigate(-1)}
           className="flex items-center text-gray-600 hover:text-gray-900"
@@ -42,17 +42,19 @@ const CalculoDetallePage = () => {
           Volver
         </button>
         
-        <div className="flex space-x-3">
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
           <Button
             variant="outline"
             icon={Printer}
             onClick={() => window.print()}
+            className="w-full sm:w-auto"
           >
             Imprimir
           </Button>
           <Button
             variant="outline"
             icon={Download}
+            className="w-full sm:w-auto"
           >
             Exportar
           </Button>
@@ -61,7 +63,7 @@ const CalculoDetallePage = () => {
 
       {/* Información del empleado */}
       <Card title="Información del Empleado">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div>
             <p className="text-sm text-gray-500">Código</p>
             <p className="text-lg font-semibold">{empleado.codigo || '—'}</p>
@@ -87,7 +89,7 @@ const CalculoDetallePage = () => {
 
       {/* Resumen de horas */}
       <Card title="Horas Extras Calculadas">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <div className="bg-blue-50 p-4 rounded-lg">
             <p className="text-sm text-blue-600 mb-1">HE 35%</p>
             <p className="text-2xl font-bold text-blue-700">
@@ -144,7 +146,7 @@ const CalculoDetallePage = () => {
 
       {/* Información adicional */}
       <Card title="Información Adicional">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
             <p className="text-sm text-gray-500">Monto 35%</p>
             <p className="text-lg font-semibold text-gray-900">

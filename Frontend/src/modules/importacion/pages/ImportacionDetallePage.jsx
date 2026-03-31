@@ -161,7 +161,7 @@ const ImportacionDetallePage = () => {
     return (
       <div className="space-y-6">
         {/* Información general */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div className="bg-gray-50 p-4 rounded-lg">
             <p className="text-sm text-gray-500 mb-1">Archivo</p>
             <div className="flex items-center">
@@ -207,7 +207,7 @@ const ImportacionDetallePage = () => {
         </div>
 
         {/* Estadísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="bg-blue-50 p-6 rounded-lg text-center">
             <p className="text-3xl font-bold text-blue-600 mb-2">
               {importacion.totalRegistros || 0}
@@ -232,12 +232,13 @@ const ImportacionDetallePage = () => {
 
         {/* Botones de acción */}
         {importacion.estado === 'PENDIENTE' && (
-          <div className="flex justify-end space-x-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
             <Button
               variant="primary"
               onClick={handleProcesar}
               loading={procesando}
               icon={RefreshCw}
+              className="w-full sm:w-auto"
             >
               Procesar importación
             </Button>
@@ -249,7 +250,7 @@ const ImportacionDetallePage = () => {
 
   const renderRegistros = () => (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h3 className="text-lg font-medium text-gray-900">
           Registros importados ({registros.length})
         </h3>
@@ -259,6 +260,7 @@ const ImportacionDetallePage = () => {
           onClick={handleExportarRegistros}
           icon={Download}
           disabled={registros.length === 0}
+          className="w-full sm:w-auto"
         >
           Exportar
         </Button>
@@ -269,7 +271,7 @@ const ImportacionDetallePage = () => {
           No hay registros para mostrar
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-2xl border border-gray-200">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -327,7 +329,7 @@ const ImportacionDetallePage = () => {
 
   const renderErrores = () => (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h3 className="text-lg font-medium text-gray-900">
           Errores de importación ({errores.length})
         </h3>
@@ -337,6 +339,7 @@ const ImportacionDetallePage = () => {
           onClick={handleExportarErrores}
           icon={Download}
           disabled={errores.length === 0}
+          className="w-full sm:w-auto"
         >
           Exportar
         </Button>
@@ -400,11 +403,12 @@ const ImportacionDetallePage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center space-x-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
         <Button
           variant="ghost"
           onClick={() => navigate('/importacion')}
           icon={ArrowLeft}
+          className="w-full sm:w-auto"
         >
           Volver
         </Button>
@@ -420,13 +424,13 @@ const ImportacionDetallePage = () => {
 
       {/* Tabs */}
       <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
+        <nav className="-mb-px flex overflow-x-auto whitespace-nowrap">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`
-                py-2 px-1 border-b-2 font-medium text-sm
+                border-b-2 px-3 py-2 text-sm font-medium first:pl-0 sm:px-4
                 ${activeTab === tab.id
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'

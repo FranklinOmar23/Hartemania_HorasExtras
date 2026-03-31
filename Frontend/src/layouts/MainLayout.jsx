@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -12,6 +12,19 @@ import Breadcrumb from './components/Breadcrumb';
 const MainLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setMobileSidebarOpen(false);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -40,10 +53,10 @@ const MainLayout = ({ children }) => {
       */}
       <div
         className={`
-          fixed inset-y-0 left-0 z-50 w-64 transform transition-all duration-300 ease-in-out
-          lg:translate-x-0
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:w-20'}
-          ${mobileSidebarOpen ? 'translate-x-0' : ''}
+          fixed inset-y-0 left-0 z-50 w-[min(86vw,18rem)] transform transition-all duration-300 ease-in-out
+          lg:w-64 lg:translate-x-0
+          ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          ${sidebarOpen ? 'lg:w-64' : 'lg:w-20'}
         `}
       >
         <Sidebar 
@@ -65,12 +78,12 @@ const MainLayout = ({ children }) => {
         />
 
         {/* Breadcrumb */}
-        <div className="px-6 py-5">
+        <div className="px-4 py-4 sm:px-6 sm:py-5">
           <Breadcrumb />
         </div>
 
         {/* Contenido principal */}
-        <main className="relative flex-1 px-6 pb-8">
+        <main className="relative flex-1 px-4 pb-6 sm:px-6 sm:pb-8">
           {children}
         </main>
 

@@ -387,7 +387,7 @@ const ReportesPage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="rounded-[30px] border border-slate-200 bg-gradient-to-r from-white via-white to-emerald-50 px-6 py-6 shadow-sm">
+      <div className="rounded-[30px] border border-slate-200 bg-gradient-to-r from-white via-white to-emerald-50 px-4 py-5 shadow-sm sm:px-6 sm:py-6">
         <h1 className="text-2xl font-bold text-gray-900">Reportes</h1>
         <p className="text-gray-500 mt-1">
           Genera y exporta reportes de horas extras
@@ -396,21 +396,21 @@ const ReportesPage = () => {
 
       {/* Selector de tipo de reporte */}
       <Card className="rounded-[30px] border border-slate-200 shadow-sm">
-        <div className="border-b border-gray-200 mb-6">
-          <nav className="-mb-px flex space-x-8">
+        <div className="mb-6 border-b border-gray-200">
+          <nav className="-mb-px flex overflow-x-auto whitespace-nowrap">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
                 className={`
-                  py-2 px-1 border-b-2 font-medium text-sm flex items-center
+                  flex items-center border-b-2 px-3 py-2 text-sm font-medium first:pl-0 sm:px-4
                   ${activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }
                 `}
               >
-                <tab.icon size={18} className="mr-2" />
+                <tab.icon size={18} className="mr-2 shrink-0" />
                 {tab.label}
               </button>
             ))}

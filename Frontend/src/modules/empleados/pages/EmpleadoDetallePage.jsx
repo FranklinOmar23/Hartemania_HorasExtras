@@ -195,7 +195,7 @@ const EmpleadoDetallePage = () => {
 
     return (
       <Card title="Estadísticas de Horas Extras">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div className="bg-blue-50 p-4 rounded-lg">
             <p className="text-sm text-blue-600 mb-1">Este mes</p>
             <p className="text-2xl font-bold text-blue-700">
@@ -255,12 +255,13 @@ const EmpleadoDetallePage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
           <Button
             variant="ghost"
             onClick={() => navigate('/empleados')}
             icon={ArrowLeft}
+            className="w-full sm:w-auto"
           >
             Volver
           </Button>
@@ -274,11 +275,12 @@ const EmpleadoDetallePage = () => {
           </div>
         </div>
 
-        <div className="flex space-x-3">
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
           <Button
             variant="outline"
             onClick={handleEditar}
             icon={Edit}
+            className="w-full sm:w-auto"
           >
             Editar
           </Button>
@@ -286,6 +288,7 @@ const EmpleadoDetallePage = () => {
             variant="danger"
             onClick={handleEliminar}
             icon={Trash2}
+            className="w-full sm:w-auto"
           >
             Eliminar
           </Button>
@@ -293,7 +296,7 @@ const EmpleadoDetallePage = () => {
       </div>
 
       {/* Contenido en grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         {/* Columna izquierda (2/3) */}
         <div className="lg:col-span-2 space-y-6">
           {renderInfoPersonal()}
