@@ -20,7 +20,8 @@ export const useRegistros = () => {
 
   const [filtros, setFiltrosState] = useState({
     search: '',
-    fecha: null,
+    fechaInicio: '',
+    fechaFin: '',
     empleadoId: '',
     tipo: '',
     orden: 'fecha_desc'
@@ -95,72 +96,30 @@ const fetchRegistros = useCallback(async (params = {}) => {
   setError(null);
 
   try {
-    let response;
+    const result = await registrosService.obtenerTodos({
+      ...filtros,
+      ...params,
+      pagina: params.pagina || paginacion.currentPage,
+      limite: params.limite || paginacion.pageSize
+    });
 
-    // Determinar qué endpoint usar basado en los filtros
-    if (filtros.empleadoId || params.empleadoId) {
-      const empleadoId = filtros.empleadoId || params.empleadoId;
-      const data = await registrosService.obtenerPorEmpleado(empleadoId);
-
-      // Aplicar paginación local
-      const registrosData = Array.isArray(data) ? data : (data.data || []);
-      const pagina = params.pagina || paginacion.currentPage;
-      const tamañoPagina = params.limite || paginacion.pageSize;
-      const startIndex = (pagina - 1) * tamañoPagina;
-      const endIndex = startIndex + tamañoPagina;
-      const paginados = registrosData.slice(startIndex, endIndex);
-
-      setRegistros(paginados);
-      setPaginacion(prev => ({
-        ...prev,
-        totalItems: registrosData.length,
-        totalPages: Math.ceil(registrosData.length / tamañoPagina),
-        currentPage: pagina,
-        pageSize: tamañoPagina
-      }));
-    }
-    else if (filtros.fecha || params.fecha) {
-      const fecha = filtros.fecha || params.fecha;
-      const result = await registrosService.obtenerPorFecha(fecha, {
-        pagina: params.pagina || paginacion.currentPage,
-        limite: params.limite || paginacion.pageSize
-      });
-
-      setRegistros(result.data || []);
-      setPaginacion(prev => ({
-        ...prev,
-        totalItems: result.total || 0,
-        totalPages: result.totalPaginas || 1,
-        currentPage: result.pagina || params.pagina || prev.currentPage,
-        pageSize: params.limite || prev.pageSize
-      }));
-    }
-    else {
-      // Usar pendientes con paginación
-      const result = await registrosService.obtenerPendientes(
-        params.pagina || paginacion.currentPage,
-        params.limite || paginacion.pageSize
-      );
-
-      console.log('Respuesta procesada:', result); // Para debug
-
-      setRegistros(result.data || []);
-      setPaginacion(prev => ({
-        ...prev,
-        totalItems: result.total || 0,
-        totalPages: result.totalPaginas || 1,
-        currentPage: result.pagina || params.pagina || prev.currentPage,
-        pageSize: params.limite || prev.pageSize
-      }));
-    }
+    setRegistros(result.data || []);
+    setPaginacion(prev => ({
+      ...prev,
+      totalItems: result.total || 0,
+      totalPages: result.totalPaginas || 1,
+      currentPage: result.pagina || params.pagina || prev.currentPage,
+      pageSize: params.limite || prev.pageSize
+    }));
 
     // Enriquecer registros con nombres de empleados
-    if (registros.length > 0 && Object.keys(empleadosMap).length > 0) {
+    if ((result.data || []).length > 0 && Object.keys(empleadosMap).length > 0) {
       setRegistros(prev =>
         prev.map(registro => ({
           ...registro,
-          empleadoNombre: empleadosMap[registro.empleadoId]?.nombre || `Empleado #${registro.empleadoId}`,
-          codigoEmpleado: empleadosMap[registro.empleadoId]?.codigo || `EMP${String(registro.empleadoId).padStart(3, '0')}`
+          empleadoNombre: registro.empleadoNombre || empleadosMap[registro.empleadoId]?.nombre || `Empleado #${registro.empleadoId}`,
+          codigoEmpleado: registro.codigoEmpleado || empleadosMap[registro.empleadoId]?.codigo || `EMP${String(registro.empleadoId).padStart(3, '0')}`,
+          tipo: registro.tipo || registro.tipoRegistro
         }))
       );
     }
@@ -210,6 +169,13 @@ const fetchRegistros = useCallback(async (params = {}) => {
       ...prev,
       ...nuevosFiltros
     }));
+
+    if (nuevosFiltros.pagina) {
+      setPaginacion(prev => ({
+        ...prev,
+        currentPage: nuevosFiltros.pagina
+      }));
+    }
   }, []);
 
   // ========================================
@@ -241,8 +207,9 @@ const fetchRegistros = useCallback(async (params = {}) => {
       setRegistros(prev =>
         prev.map(registro => ({
           ...registro,
-          empleadoNombre: empleadosMap[registro.empleadoId]?.nombre || `Empleado #${registro.empleadoId}`,
-          codigoEmpleado: empleadosMap[registro.empleadoId]?.codigo || `EMP${String(registro.empleadoId).padStart(3, '0')}`
+          empleadoNombre: registro.empleadoNombre || empleadosMap[registro.empleadoId]?.nombre || `Empleado #${registro.empleadoId}`,
+          codigoEmpleado: registro.codigoEmpleado || empleadosMap[registro.empleadoId]?.codigo || `EMP${String(registro.empleadoId).padStart(3, '0')}`,
+          tipo: registro.tipo || registro.tipoRegistro
         }))
       );
     }

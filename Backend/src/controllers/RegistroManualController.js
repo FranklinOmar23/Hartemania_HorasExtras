@@ -8,6 +8,25 @@ import dateHelpers from '../utils/dateHelpers.js';
 
 class RegistroManualController {
   /**
+   * Listar todos los registros con filtros opcionales
+   * GET /api/registros
+   */
+  listarTodos = catchAsync(async (req, res) => {
+    const resultado = await RegistroAsistenciaRepository.findAllFiltered(req.query);
+
+    res.json(responseFormatter.paginated(
+      resultado.data,
+      {
+        total: resultado.total,
+        page: resultado.pagina,
+        limit: resultado.limite,
+        pages: resultado.pages
+      },
+      'Registros encontrados'
+    ));
+  });
+
+  /**
    * Crear registro manual
    * POST /api/registros/manual
    */

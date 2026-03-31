@@ -1,10 +1,6 @@
 // src/repositories/BaseRepository.js
 import { getConnection, executeQuery, TYPES } from '../config/database.js';
 
-/**
- * Repositorio base con métodos genéricos para todas las entidades
- * Patrón: Repository Pattern
- */
 class BaseRepository {
   constructor(tableName, modelClass) {
     this.tableName = tableName;
@@ -12,24 +8,22 @@ class BaseRepository {
   }
 
   /**
-   * Obtener todos los registros con paginación
+   * Obtener todos los registros con paginacion
    */
   async findAll(where = '', params = {}, pagina = 1, limite = 20, orderBy = 'Id DESC') {
     try {
       const pool = await getConnection();
       const offset = (pagina - 1) * limite;
       
-      const request = pool.request();
-      
-      // Agregar parámetros
-      Object.entries(params).forEach(([key, value]) => {
-        request.input(key, value);
-      });
-      
-      request.input('Offset', TYPES.Int, offset);
-      request.input('Limite', TYPES.Int, limite);
-      
       const whereClause = where ? `WHERE ${where}` : '';
+
+      // Request para datos paginados
+      const dataRequest = pool.request();
+      Object.entries(params).forEach(([key, value]) => {
+        dataRequest.input(key, value);
+      });
+      dataRequest.input('Offset', TYPES.Int, offset);
+      dataRequest.input('Limite', TYPES.Int, limite);
       
       const query = `
         SELECT * FROM ${this.tableName}
@@ -38,12 +32,15 @@ class BaseRepository {
         OFFSET @Offset ROWS
         FETCH NEXT @Limite ROWS ONLY
       `;
+      const result = await dataRequest.query(query);
       
-      const result = await request.query(query);
-      
-      // Obtener total de registros
+      // Request separado para el conteo (mssql no permite reusar request)
+      const countRequest = pool.request();
+      Object.entries(params).forEach(([key, value]) => {
+        countRequest.input(key, value);
+      });
       const countQuery = `SELECT COUNT(*) as Total FROM ${this.tableName} ${whereClause}`;
-      const countResult = await request.query(countQuery);
+      const countResult = await countRequest.query(countQuery);
       
       return {
         data: result.recordset.map(row => new this.modelClass(row)),
@@ -117,10 +114,18 @@ class BaseRepository {
       const valores = campos.map(c => `@${c}`).join(', ');
       
       campos.forEach(campo => {
+        const valor = data[campo];
         let type = TYPES.NVarChar;
-        if (typeof data[campo] === 'number') type = TYPES.Decimal(10,2);
-        else if (data[campo] instanceof Date) type = TYPES.DateTime;
-        request.input(campo, type, data[campo]);
+        if (valor === null || valor === undefined) {
+          type = TYPES.NVarChar;
+        } else if (typeof valor === 'boolean') {
+          type = TYPES.Bit;
+        } else if (typeof valor === 'number') {
+          type = Number.isInteger(valor) ? TYPES.Int : TYPES.Decimal(10, 2);
+        } else if (valor instanceof Date) {
+          type = TYPES.DateTime;
+        }
+        request.input(campo, type, valor);
       });
       
       const query = `
@@ -150,9 +155,15 @@ class BaseRepository {
         if (valor !== undefined) {
           updates.push(`${campo} = @${campo}`);
           let type = TYPES.NVarChar;
-          if (typeof valor === 'number') type = TYPES.Decimal(10,2);
-          else if (valor instanceof Date) type = TYPES.DateTime;
-          else if (typeof valor === 'boolean') type = TYPES.Bit;
+          if (valor === null) {
+            type = TYPES.NVarChar;
+          } else if (typeof valor === 'boolean') {
+            type = TYPES.Bit;
+          } else if (typeof valor === 'number') {
+            type = Number.isInteger(valor) ? TYPES.Int : TYPES.Decimal(10, 2);
+          } else if (valor instanceof Date) {
+            type = TYPES.DateTime;
+          }
           request.input(campo, type, valor);
         }
       });
@@ -172,31 +183,19 @@ class BaseRepository {
   }
 
   /**
-   * Eliminar registro (soft delete si tiene campo Activo)
+   * Eliminar registro (soft delete si softDelete=true, hard delete si false)
    */
   async delete(id, softDelete = true) {
     try {
       const pool = await getConnection();
       
-      // Verificar si la tabla tiene campo Activo
-      const checkQuery = `
-        SELECT COUNT(*) as HasActivo 
-        FROM INFORMATION_SCHEMA.COLUMNS 
-        WHERE TABLE_NAME = '${this.tableName}' AND COLUMN_NAME = 'Activo'
-      `;
-      
-      const checkResult = await pool.request().query(checkQuery);
-      const hasActivo = checkResult.recordset[0].HasActivo > 0;
-      
-      if (softDelete && hasActivo) {
-        // Soft delete
-        await pool.request()
+      if (softDelete) {
+        const result = await pool.request()
           .input('Id', TYPES.Int, id)
           .query(`UPDATE ${this.tableName} SET Activo = 0 WHERE Id = @Id`);
         
         return { success: true, message: 'Registro desactivado correctamente' };
       } else {
-        // Hard delete
         await pool.request()
           .input('Id', TYPES.Int, id)
           .query(`DELETE FROM ${this.tableName} WHERE Id = @Id`);

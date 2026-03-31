@@ -5,4 +5,4 @@ export { default as FeriadoRepository } from './FeriadoRepository.js';
 export { default as ImportacionRepository } from './ImportacionRepository.js';
 export { default as RegistroAsistenciaRepository } from './RegistroAsistenciaRepository.js';
 export { default as ResumenQuincenalRepository } from './ResumenQuincenalRepository.js';
-export { default as TipoHoraExtraRepository } from './TipoHoraExtraRepository.js';  // ← Agregar esta línea
+export { default as TipoHoraExtraRepository } from './TipoHoraExtraRepository.js';

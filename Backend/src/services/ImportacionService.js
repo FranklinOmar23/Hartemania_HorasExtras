@@ -6,7 +6,7 @@ import ImportacionRepository from '../repositories/ImportacionRepository.js';
 import RegistroAsistenciaRepository from '../repositories/RegistroAsistenciaRepository.js';
 import EmpleadoRepository from '../repositories/EmpleadoRepository.js';
 import logger from '../middleware/logger.js';
-import { HTTP_STATUS, ESTADOS_IMPORTACION } from '../utils/constants.js';
+import { HTTP_STATUS, ESTADOS_IMPORTACION, TIPOS_REGISTRO, ORIGENES_DATOS } from '../utils/constants.js';
 
 class ImportacionService {
   /**
@@ -64,7 +64,7 @@ class ImportacionService {
 
       return {
         importacion,
-        registros: registrosProcesados.exitosos,
+        exitosos: registrosProcesados.exitosos,
         errores: registrosProcesados.errores,
         metadatos: resultado.metadatos
       };
@@ -90,24 +90,22 @@ class ImportacionService {
           throw new Error(`Empleado con código ${registro.codigo} no encontrado`);
         }
 
-        // Verificar si ya existe registro para esa fecha
-        const existe = await RegistroAsistenciaRepository.existeRegistro(
+        // Eliminar registro existente para ese empleado+fecha (si hay)
+        await RegistroAsistenciaRepository.deleteByEmpleadoYFecha(
           empleado.Id,
           registro.fecha
         );
 
-        if (existe) {
-          throw new Error(`Ya existe un registro para el empleado ${registro.codigo} en la fecha ${registro.fecha}`);
-        }
-
-        // ✅ PERMITIR horas null (se asignarán valores por defecto en el repositorio)
+        // Crear registro nuevo
         const nuevoRegistro = await RegistroAsistenciaRepository.create({
           EmpleadoId: empleado.Id,
           ImportacionId: importacionId,
           Fecha: registro.fecha,
-          HoraEntrada: registro.horaEntrada,  // Puede ser null
-          HoraSalida: registro.horaSalida,    // Puede ser null
-          Comentarios: registro.comentarios,
+          HoraEntrada: registro.horaEntrada,
+          HoraSalida: registro.horaSalida,
+          TipoRegistro: TIPOS_REGISTRO.IMPORTADO,
+          Origen: ORIGENES_DATOS.EXCEL,
+          Comentarios: registro.comentarios || null,
           FilaExcel: registro.fila,
           UsuarioCreacion: 'IMPORTACION'
         });
@@ -121,6 +119,18 @@ class ImportacionService {
           error: error.message
         });
       }
+    }
+
+    // Log resumen de errores para diagnostico
+    if (errores.length > 0) {
+      const razones = {};
+      for (const e of errores) {
+        const razon = e.error.includes('Ya existe') ? 'Duplicado' : 
+                      e.error.includes('no encontrado') ? 'Empleado no encontrado' : 'Otro';
+        razones[razon] = (razones[razon] || 0) + 1;
+      }
+      console.log(`Resumen errores importacion: ${JSON.stringify(razones)}`);
+      console.log(`Primeros 3 errores:`, errores.slice(0, 3));
     }
 
     return { exitosos, errores };

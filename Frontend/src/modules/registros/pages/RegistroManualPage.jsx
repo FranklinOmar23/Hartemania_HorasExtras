@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Save, Clock, User, Calendar as CalendarIcon } from 'lucide-react';
+import { ArrowLeft, Clock } from 'lucide-react';
 import { useRegistroForm } from '../hooks/useRegistroForm';
 import RegistroManualForm from '../components/RegistroManualForm';
 import { Button, Card, Spinner, Alert } from '../../../components/common';
@@ -87,29 +87,37 @@ const RegistroManualPage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center space-x-4">
-        <Button
-          variant="ghost"
-          onClick={handleCancel}
-          icon={ArrowLeft}
-        >
-          Volver
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {isEditing ? 'Editar Registro Manual' : 'Nuevo Registro Manual'}
-          </h1>
-          <p className="text-gray-500 mt-1">
-            {isEditing 
-              ? 'Modifica los datos del registro de asistencia'
-              : 'Registra manualmente la entrada y salida de un empleado'
-            }
-          </p>
+      <div className="rounded-[30px] border border-slate-200 bg-gradient-to-r from-white via-white to-amber-50 px-6 py-6 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              onClick={handleCancel}
+              icon={ArrowLeft}
+            >
+              Volver
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {isEditing ? 'Editar Registro Manual' : 'Nuevo Registro Manual'}
+              </h1>
+              <p className="text-gray-500 mt-1">
+                {isEditing 
+                  ? 'Modifica los datos del registro de asistencia'
+                  : 'Registra manualmente la entrada y salida de un empleado'
+                }
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
+            Registro manual supervisado
+          </div>
         </div>
       </div>
 
       {/* Contenido */}
-      <Card>
+      <Card className="rounded-[30px] border border-slate-200 shadow-sm">
         {loading && isEditing ? (
           <div className="flex justify-center py-12">
             <Spinner size="lg" text="Cargando registro..." />

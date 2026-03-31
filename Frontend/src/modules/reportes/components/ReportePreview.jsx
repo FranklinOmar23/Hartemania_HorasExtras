@@ -3,6 +3,7 @@ import { Maximize2 } from 'lucide-react';
 import ReporteQuincenal from './ReporteQuincenal';
 import ReporteEmpleado from './ReporteEmpleado';
 import { Button } from '../../../components/common';
+import { formatearMoneda } from '../../../utils';
 
 // ============================================
 // COMPONENTE REPORTE PREVIEW
@@ -34,17 +35,17 @@ const ReportePreview = ({ data, tipo, onVerCompleto }) => {
   // RENDER
   // ========================================
   return (
-    <div className="relative">
+    <div className="relative rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
       {/* Overlay gradient para indicar que hay más contenido */}
-      <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+      <div className="pointer-events-none absolute bottom-0 left-4 right-4 h-24 bg-gradient-to-t from-white via-white/90 to-transparent" />
       
       {/* Contenido del preview */}
-      <div className="max-h-96 overflow-y-auto pb-8">
+      <div className="max-h-[34rem] overflow-y-auto pb-10">
         {renderPreview()}
       </div>
 
       {/* Botón para ver completo */}
-      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2">
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 transform">
         <Button
           variant="outline"
           size="sm"
@@ -65,9 +66,9 @@ const ReportePreview = ({ data, tipo, onVerCompleto }) => {
 const ReporteComparativoPreview = ({ data }) => {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {data.datos.slice(0, 4).map((item, idx) => (
-          <div key={idx} className="bg-gray-50 p-3 rounded">
+          <div key={idx} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-medium text-gray-700">{item.mes}</p>
             <p className="text-lg font-semibold text-blue-600">{item.horas} hrs</p>
             <p className="text-xs text-gray-500">{formatearMoneda(item.monto)}</p>

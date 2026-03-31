@@ -75,19 +75,21 @@ const Modal = ({
       onClick={handleClickOutside}
     >
       {/* Overlay */}
-      <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+      <div className="fixed inset-0 bg-slate-950/45 backdrop-blur-sm transition-opacity" />
 
       {/* Modal */}
       <div className="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
         <div
-          className={`relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 w-full ${sizes[size]} ${className}`}
+          className={`relative w-full overflow-hidden rounded-[28px] border border-white/70 bg-white text-left shadow-2xl shadow-slate-900/15 transition-all sm:my-8 ${sizes[size]} ${className}`}
           {...props}
         >
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-r from-amber-100 via-white to-emerald-100 opacity-80" />
+
           {/* Header */}
           {(title || showCloseButton) && (
-            <div className="bg-white px-4 py-3 border-b border-gray-200 sm:px-6 flex items-center justify-between">
+            <div className="relative flex items-center justify-between border-b border-slate-100 bg-white/90 px-4 py-4 sm:px-6">
               {title && (
-                <h3 className="text-lg font-medium leading-6 text-gray-900" id="modal-title">
+                <h3 className="text-lg font-semibold leading-6 text-slate-900" id="modal-title">
                   {title}
                 </h3>
               )}
@@ -95,7 +97,7 @@ const Modal = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  className="rounded-full bg-slate-100 p-2 text-slate-500 transition hover:bg-slate-200 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2"
                 >
                   <span className="sr-only">Cerrar</span>
                   <X size={20} />
@@ -105,13 +107,13 @@ const Modal = ({
           )}
 
           {/* Content */}
-          <div className="bg-white px-4 py-5 sm:p-6">
+          <div className="relative bg-white px-4 py-5 sm:p-6">
             {children}
           </div>
 
           {/* Footer */}
           {footer && (
-            <div className="bg-gray-50 px-4 py-3 sm:px-6 border-t border-gray-200">
+            <div className="border-t border-slate-100 bg-slate-50/80 px-4 py-3 sm:px-6">
               {footer}
             </div>
           )}
@@ -161,7 +163,7 @@ export const ConfirmModal = ({
         </div>
       }
     >
-      <p className="text-sm text-gray-500">{message}</p>
+      <p className="text-sm text-slate-600">{message}</p>
     </Modal>
   );
 };

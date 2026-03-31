@@ -25,9 +25,9 @@ export const useImportacion = () => {
   
   setImportando(true);
   try {
-    // ✅ Pasar el archivo directamente, NO crear FormData aquí
-    const resultado = await importacionService.importar(file, (progress) => {
-      console.log('📊 Progreso:', progress);
+    // Pasar archivo y mapeo al servicio
+    const resultado = await importacionService.importar(file, mapeo, (progress) => {
+      console.log('Progreso:', progress);
     });
     
     return resultado;

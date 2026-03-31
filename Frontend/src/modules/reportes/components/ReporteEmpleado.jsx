@@ -11,13 +11,13 @@ import { formatearMoneda, formatearFecha, formatearHoras } from '../../../utils'
 const ReporteEmpleado = ({ data, fullPage = false }) => {
   if (!data) return null;
 
-  const { empleado, resumen, registros } = data;
+  const { empleado, resumen, registros = [] } = data;
 
   // ========================================
   // DATOS PARA GRÁFICO
   // ========================================
   const chartData = registros.map(reg => ({
-    fecha: formatearFecha(reg.fecha, 'DD/MM'),
+    fecha: formatearFecha(reg.fecha, 'dd/MM'),
     horas: reg.totalHoras,
     monto: reg.monto
   }));
@@ -78,9 +78,9 @@ const ReporteEmpleado = ({ data, fullPage = false }) => {
   // RENDER
   // ========================================
   return (
-    <div className={`space-y-8 ${fullPage ? '' : 'max-h-96 overflow-y-auto'}`}>
+    <div className={`space-y-8 ${fullPage ? '' : 'max-h-96 overflow-y-auto pr-1'}`}>
       {/* Información del empleado */}
-      <div className="bg-gray-50 p-6 rounded-lg">
+      <div className="rounded-[28px] border border-slate-200 bg-gradient-to-r from-slate-50 via-white to-emerald-50 p-6 shadow-sm">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <p className="text-sm text-gray-500">Código</p>
@@ -102,22 +102,22 @@ const ReporteEmpleado = ({ data, fullPage = false }) => {
       </div>
 
       {/* Tarjetas de resumen */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-blue-50 p-4 rounded-lg">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="rounded-2xl border border-blue-100 bg-blue-50/80 p-5">
           <p className="text-sm text-blue-600 mb-1">Total Horas</p>
           <p className="text-2xl font-bold text-gray-900">
             {formatearHoras(resumen.totalHoras)}
           </p>
         </div>
 
-        <div className="bg-green-50 p-4 rounded-lg">
+        <div className="rounded-2xl border border-emerald-100 bg-emerald-50/80 p-5">
           <p className="text-sm text-green-600 mb-1">Total a Pagar</p>
           <p className="text-2xl font-bold text-gray-900">
             {formatearMoneda(resumen.totalPagar)}
           </p>
         </div>
 
-        <div className="bg-purple-50 p-4 rounded-lg">
+        <div className="rounded-2xl border border-amber-100 bg-amber-50/80 p-5">
           <p className="text-sm text-purple-600 mb-1">Días trabajados</p>
           <p className="text-2xl font-bold text-gray-900">
             {registros.length}
@@ -127,10 +127,10 @@ const ReporteEmpleado = ({ data, fullPage = false }) => {
 
       {/* Gráfico de tendencia */}
       {!fullPage && chartData.length > 0 && (
-        <div style={{ width: '100%', height: 200 }}>
+        <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm" style={{ width: '100%', height: 260 }}>
           <ResponsiveContainer>
             <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis dataKey="fecha" />
               <YAxis yAxisId="left" />
               <YAxis yAxisId="right" orientation="right" />
@@ -143,26 +143,26 @@ const ReporteEmpleado = ({ data, fullPage = false }) => {
       )}
 
       {/* Desglose por tipo */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="border border-blue-200 rounded p-3 text-center">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="rounded-2xl border border-blue-200 bg-white p-4 text-center shadow-sm">
           <p className="text-xs text-blue-600">HE 35%</p>
           <p className="text-lg font-semibold text-gray-900">
             {formatearHoras(resumen.horasPorTipo.he35)}
           </p>
         </div>
-        <div className="border border-green-200 rounded p-3 text-center">
+        <div className="rounded-2xl border border-green-200 bg-white p-4 text-center shadow-sm">
           <p className="text-xs text-green-600">HE 100%</p>
           <p className="text-lg font-semibold text-gray-900">
             {formatearHoras(resumen.horasPorTipo.he100)}
           </p>
         </div>
-        <div className="border border-yellow-200 rounded p-3 text-center">
+        <div className="rounded-2xl border border-yellow-200 bg-white p-4 text-center shadow-sm">
           <p className="text-xs text-yellow-600">HE 15%</p>
           <p className="text-lg font-semibold text-gray-900">
             {formatearHoras(resumen.horasPorTipo.he15)}
           </p>
         </div>
-        <div className="border border-red-200 rounded p-3 text-center">
+        <div className="rounded-2xl border border-red-200 bg-white p-4 text-center shadow-sm">
           <p className="text-xs text-red-600">Feriado</p>
           <p className="text-lg font-semibold text-gray-900">
             {formatearHoras(resumen.horasPorTipo.feriado || 0)}
@@ -184,7 +184,7 @@ const ReporteEmpleado = ({ data, fullPage = false }) => {
       </div>
 
       {/* Totales */}
-      <div className="bg-gray-50 p-4 rounded-lg flex justify-between items-center">
+      <div className="flex items-center justify-between rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-4">
         <span className="font-medium text-gray-700">Total general</span>
         <div className="text-right">
           <p className="text-lg font-bold text-gray-900">

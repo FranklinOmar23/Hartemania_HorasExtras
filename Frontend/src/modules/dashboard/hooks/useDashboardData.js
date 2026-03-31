@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
-import { reportesService, empleadosService, importacionService } from '../../../services';
-import { useUIStore } from '../../../store';
+import { get } from '../../../services/api';
 
 // ============================================
 // HOOK PERSONALIZADO PARA DATOS DEL DASHBOARD
@@ -11,130 +10,97 @@ export const useDashboardData = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [ultimaActualizacion, setUltimaActualizacion] = useState(null);
-  const { showToast } = useUIStore();
 
-  // ========================================
-  // OBTENER DATOS DEL DASHBOARD
-  // ========================================
   const fetchDashboardData = useCallback(async (filtros = {}) => {
     setLoading(true);
     setError(null);
 
+    const anio = filtros.anio || new Date().getFullYear();
+    const mes = filtros.mes || new Date().getMonth() + 1;
+
     try {
-      // Obtener datos en paralelo
-      const [
-        empleados,
-        importaciones
-      ] = await Promise.all([
-        empleadosService.obtenerTodos({ activo: true, limite: 100 }),
-        importacionService.obtenerTodas({ limite: 5 })
-      ]);
+      const response = await get('/dashboard', { anio, mes });
+      const d = response.data.data;
 
-      // NOTA: Como no existe /reportes/dashboard en tu backend,
-      // usamos otros endpoints para construir los datos
-      
-      // Obtener reporte mensual (primeros datos)
-      let reporteMensual = null;
-      try {
-        reporteMensual = await reportesService.mensual(
-          filtros.anio || new Date().getFullYear(),
-          filtros.mes || new Date().getMonth() + 1,
-          'json'
-        );
-      } catch (err) {
-        console.warn('No se pudo obtener reporte mensual:', err);
+      const resumen = d.resumen || {};
+      const tieneQuincenas = resumen.tieneQuincenas;
+
+      // Datos para grafico de barras
+      let porDia = [];
+      if (tieneQuincenas && d.horasPorDia?.length > 0) {
+        porDia = d.horasPorDia;
+      } else if (d.registrosPorDia?.length > 0) {
+        // Sin quincenas: mostrar registros por dia
+        porDia = d.registrosPorDia.map(r => {
+          const f = r.fecha;
+          const dia = f ? f.substring(8, 10) + '/' + f.substring(5, 7) : '';
+          return {
+            dia,
+            'Registros': r.totalRegistros,
+            'Empleados': r.empleados
+          };
+        });
       }
 
-      // Obtener top empleados (usando reporte quincenal actual)
-      let topEmpleados = [];
-      try {
-        const reporteQuincenal = await reportesService.quincenal(
-          filtros.anio || new Date().getFullYear(),
-          filtros.mes || new Date().getMonth() + 1,
-          1, // Primera quincena
-          'json'
-        );
-        topEmpleados = (reporteQuincenal?.empleados || []).slice(0, 5);
-      } catch (err) {
-        console.warn('No se pudo obtener top empleados:', err);
+      // Datos para grafico de pastel
+      let porTipo = [];
+      if (tieneQuincenas) {
+        porTipo = [
+          { name: 'HE 35%', value: resumen.horasPorTipo?.he35 || 0, color: '#3B82F6' },
+          { name: 'HE 100%', value: resumen.horasPorTipo?.he100 || 0, color: '#10B981' },
+          { name: 'HE 15%', value: resumen.horasPorTipo?.he15 || 0, color: '#F59E0B' },
+          { name: 'Feriado', value: resumen.horasPorTipo?.feriado || 0, color: '#EF4444' }
+        ];
       }
 
-      // Procesar datos para el frontend
       const processedData = {
         resumen: {
-          totalHoras: reporteMensual?.resumen?.totalHoras || 0,
-          totalPagar: reporteMensual?.resumen?.totalPagar || 0,
-          empleadosActivos: empleados?.total || 0,
-          empleadosConHE: reporteMensual?.resumen?.empleadosConHE || 0,
-          diasConHE: reporteMensual?.resumen?.diasConHE || 0,
+          totalHoras: resumen.totalHoras || 0,
+          totalPagar: resumen.totalPagar || 0,
+          empleadosActivos: resumen.empleadosActivos || 0,
+          empleadosConHE: resumen.empleadosConHE || 0,
+          totalRegistros: resumen.totalRegistros || 0,
+          empleadosConRegistros: resumen.empleadosConRegistros || 0,
+          diasConRegistros: resumen.diasConRegistros || 0,
+          diasConHE: resumen.diasConRegistros || 0,
           diasLaborables: 22,
-          limiteTrimestral: 68
+          limiteTrimestral: 68,
+          tieneQuincenas
         },
-
-        horasPorTipo: {
-          porDia: [],
-          porTipo: [
-            { name: '35%', value: reporteMensual?.resumen?.horasPorTipo?.he35 || 0 },
-            { name: '100%', value: reporteMensual?.resumen?.horasPorTipo?.he100 || 0 },
-            { name: '15%', value: reporteMensual?.resumen?.horasPorTipo?.he15 || 0 },
-            { name: 'Feriado', value: reporteMensual?.resumen?.horasPorTipo?.feriado || 0 }
-          ]
-        },
-
-        topEmpleados: topEmpleados.map(emp => ({
-          id: emp.id,
-          nombre: emp.nombre,
-          codigo: emp.codigo,
-          posicion: emp.posicion,
-          totalHoras: emp.totalHoras || 0,
-          totalPagar: emp.totalPagar || 0
+        horasPorTipo: { porDia, porTipo },
+        topEmpleados: (d.topEmpleados || []).map(e => ({
+          id: e.id,
+          codigo: e.codigo,
+          nombre: e.nombre,
+          posicion: e.posicion,
+          totalHoras: e.totalHoras || 0,
+          totalPagar: e.totalPagar || 0,
+          totalRegistros: e.totalRegistros || 0
         })),
-
-        ultimasImportaciones: (importaciones?.data || []).map(imp => ({
+        ultimasImportaciones: (d.ultimasImportaciones || []).map(imp => ({
           id: imp.id,
           nombreArchivo: imp.nombreArchivo,
-          fecha: imp.fechaImportacion,
-          totalRegistros: imp.totalRegistros,
-          registrosValidos: imp.registrosValidos,
-          registrosError: imp.registrosError,
-          estado: imp.estado,
-          usuario: imp.usuarioImportacion
+          fecha: imp.fecha,
+          totalRegistros: imp.totalRegistros || 0,
+          registrosValidos: imp.registrosValidos || 0,
+          registrosError: imp.registrosError || 0,
+          estado: imp.estado || 'PROCESADO',
+          usuario: imp.usuario || ''
         })),
-
-        alertas: [] // Implementar según necesidad
+        alertas: []
       };
 
       setData(processedData);
       setUltimaActualizacion(new Date().toLocaleString());
-      
-      if (showToast) {
-        showToast({
-          type: 'success',
-          message: 'Datos cargados correctamente'
-        });
-      }
-      
     } catch (err) {
       console.error('Error en fetchDashboardData:', err);
-      setError(err.message);
-      if (showToast) {
-        showToast({
-          type: 'error',
-          message: 'Error al cargar datos del dashboard'
-        });
-      }
+      setError(err.message || 'Error al cargar datos');
     } finally {
       setLoading(false);
     }
-  }, [showToast]);
+  }, []);
 
-  return {
-    data,
-    loading,
-    error,
-    ultimaActualizacion,
-    fetchDashboardData
-  };
+  return { data, loading, error, ultimaActualizacion, fetchDashboardData };
 };
 
 export default useDashboardData;

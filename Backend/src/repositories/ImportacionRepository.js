@@ -41,12 +41,12 @@ class ImportacionRepository extends BaseRepository {
       `;
       
       if (periodoInicio) {
-        request.input('PeriodoInicio', TYPES.Date, periodoInicio);
+        request.input('PeriodoInicio', TYPES.NVarChar, periodoInicio);
         query += ', PeriodoInicio = @PeriodoInicio';
       }
       
       if (periodoFin) {
-        request.input('PeriodoFin', TYPES.Date, periodoFin);
+        request.input('PeriodoFin', TYPES.NVarChar, periodoFin);
         query += ', PeriodoFin = @PeriodoFin';
       }
       
@@ -127,24 +127,24 @@ class ImportacionRepository extends BaseRepository {
       const offset = (pagina - 1) * limite;
       
       const result = await pool.request()
-        .input('FechaInicio', TYPES.Date, fechaInicio)
-        .input('FechaFin', TYPES.Date, fechaFin)
+        .input('FechaInicio', TYPES.NVarChar, fechaInicio)
+        .input('FechaFin', TYPES.NVarChar, fechaFin)
         .input('Offset', TYPES.Int, offset)
         .input('Limite', TYPES.Int, limite)
         .query(`
           SELECT * FROM Importaciones 
-          WHERE FechaImportacion BETWEEN @FechaInicio AND @FechaFin
+          WHERE CONVERT(VARCHAR(10), FechaImportacion, 23) BETWEEN @FechaInicio AND @FechaFin
           ORDER BY FechaImportacion DESC
           OFFSET @Offset ROWS
           FETCH NEXT @Limite ROWS ONLY
         `);
       
       const countResult = await pool.request()
-        .input('FechaInicio', TYPES.Date, fechaInicio)
-        .input('FechaFin', TYPES.Date, fechaFin)
+        .input('FechaInicio', TYPES.NVarChar, fechaInicio)
+        .input('FechaFin', TYPES.NVarChar, fechaFin)
         .query(`
           SELECT COUNT(*) as Total FROM Importaciones 
-          WHERE FechaImportacion BETWEEN @FechaInicio AND @FechaFin
+          WHERE CONVERT(VARCHAR(10), FechaImportacion, 23) BETWEEN @FechaInicio AND @FechaFin
         `);
       
       return {

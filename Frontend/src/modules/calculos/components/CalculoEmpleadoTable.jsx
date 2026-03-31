@@ -276,7 +276,7 @@ const CalculoEmpleadoTable = ({
   return (
     <div className="space-y-4">
       {/* Barra de búsqueda y totales */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col items-start justify-between gap-4 rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center">
         <div className="w-full sm:w-64">
           <Input
             placeholder="Buscar por nombre o código..."
@@ -298,6 +298,7 @@ const CalculoEmpleadoTable = ({
       </div>
 
       {/* Tabla */}
+      <div className="rounded-[28px] border border-slate-200 bg-white p-2 shadow-sm">
       <Table
         columns={columns}
         data={currentEmpleados}
@@ -305,6 +306,7 @@ const CalculoEmpleadoTable = ({
         emptyMessage="No hay empleados con horas extras en este período"
         onRowClick={onVerDetalle}
       />
+      </div>
 
       {/* Paginación */}
       {filteredEmpleados.length > 0 && (

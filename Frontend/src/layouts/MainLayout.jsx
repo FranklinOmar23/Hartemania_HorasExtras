@@ -22,10 +22,12 @@ const MainLayout = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.16),_transparent_28%),radial-gradient(circle_at_top_right,_rgba(16,185,129,0.14),_transparent_24%),linear-gradient(180deg,_#fffdf8_0%,_#f8fafc_48%,_#f4f7fb_100%)]">
+      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(15,23,42,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.025)_1px,transparent_1px)] bg-[size:32px_32px]" />
+
       {/* Sidebar para móvil (overlay) */}
       <div
-        className={`fixed inset-0 z-40 bg-gray-600 bg-opacity-75 transition-opacity lg:hidden ${
+        className={`fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-sm transition-opacity lg:hidden ${
           mobileSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => setMobileSidebarOpen(false)}
@@ -53,7 +55,7 @@ const MainLayout = ({ children }) => {
 
       {/* Contenido principal */}
       <div className={`
-        flex flex-col min-h-screen transition-all duration-300
+        relative flex min-h-screen flex-col transition-all duration-300
         ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}
       `}>
         {/* Navbar */}
@@ -63,12 +65,12 @@ const MainLayout = ({ children }) => {
         />
 
         {/* Breadcrumb */}
-        <div className="px-6 py-4">
+        <div className="px-6 py-5">
           <Breadcrumb />
         </div>
 
         {/* Contenido principal */}
-        <main className="flex-1 px-6 pb-6">
+        <main className="relative flex-1 px-6 pb-8">
           {children}
         </main>
 

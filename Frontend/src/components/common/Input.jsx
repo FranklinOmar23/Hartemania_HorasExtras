@@ -43,6 +43,7 @@ const Input = forwardRef(({
     : '';
 
   const iconClasses = Icon ? (iconPosition === 'left' ? 'pl-10' : 'pr-10') : '';
+  const iconIsComponent = typeof Icon === 'function' || (typeof Icon === 'object' && Icon !== null);
 
   // ========================================
   // RENDER
@@ -62,7 +63,11 @@ const Input = forwardRef(({
         {/* Icono izquierdo */}
         {Icon && iconPosition === 'left' && (
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Icon className="h-5 w-5 text-gray-400" />
+            {iconIsComponent ? (
+              <Icon className="h-5 w-5 text-gray-400" />
+            ) : (
+              <span className="text-sm font-semibold text-gray-400">{Icon}</span>
+            )}
           </div>
         )}
 
@@ -100,7 +105,11 @@ const Input = forwardRef(({
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             ) : Icon ? (
-              <Icon className="h-5 w-5 text-gray-400" />
+              iconIsComponent ? (
+                <Icon className="h-5 w-5 text-gray-400" />
+              ) : (
+                <span className="text-sm font-semibold text-gray-400">{Icon}</span>
+              )
             ) : null}
           </div>
         ) : null}

@@ -50,7 +50,22 @@ const CalculoForm = ({ periodo, onChange, onCalcular, loading }) => {
   // RENDER
   // ========================================
   return (
-    <div className="flex flex-col md:flex-row items-end space-y-4 md:space-y-0 md:space-x-4">
+    <div className="rounded-[28px] border border-slate-200 bg-gradient-to-r from-white via-white to-emerald-50 p-5 shadow-sm">
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
+            Periodo de trabajo
+          </p>
+          <h3 className="mt-2 text-xl font-semibold text-slate-900">
+            Selecciona la quincena a procesar
+          </h3>
+        </div>
+        <div className="hidden rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 md:block">
+          Motor de calculo activo
+        </div>
+      </div>
+
+      <div className="flex flex-col items-end space-y-4 md:flex-row md:space-x-4 md:space-y-0">
       {/* Año */}
       <div className="flex-1">
         <Select
@@ -92,9 +107,11 @@ const CalculoForm = ({ periodo, onChange, onCalcular, loading }) => {
           loading={loading}
           icon={Calendar}
           fullWidth
+          className="min-w-[10rem]"
         >
           Calcular
         </Button>
+      </div>
       </div>
     </div>
   );

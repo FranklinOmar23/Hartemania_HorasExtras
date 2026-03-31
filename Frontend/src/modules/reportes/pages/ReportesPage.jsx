@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { FileText, Download, Calendar, Users, BarChart3 } from 'lucide-react';
 import ReporteSelector from '../components/ReporteSelector';
 import ReporteQuincenal from '../components/ReporteQuincenal';
@@ -19,6 +19,7 @@ import 'jspdf-autotable';
 
 const ReportesPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { showToast } = useUIStore();
   
   // Estado
@@ -27,6 +28,26 @@ const ReportesPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [parametros, setParametros] = useState(null);
+
+  const tabFromLocation = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const queryTab = params.get('tab');
+    const allowedTabs = ['quincenal', 'empleado', 'comparativo'];
+
+    if (allowedTabs.includes(queryTab)) {
+      return queryTab;
+    }
+
+    if (location.pathname.endsWith('/quincenal')) return 'quincenal';
+    if (location.pathname.endsWith('/empleado')) return 'empleado';
+    if (location.pathname.endsWith('/comparativo')) return 'comparativo';
+
+    return 'quincenal';
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    setActiveTab(tabFromLocation);
+  }, [tabFromLocation]);
 
   // ========================================
   // GENERAR REPORTE
@@ -357,10 +378,16 @@ const ReportesPage = () => {
     { id: 'comparativo', label: 'Comparativo', icon: BarChart3 }
   ];
 
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    setReporteData(null);
+    navigate(`/reportes?tab=${tabId}`, { replace: false });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
+      <div className="rounded-[30px] border border-slate-200 bg-gradient-to-r from-white via-white to-emerald-50 px-6 py-6 shadow-sm">
         <h1 className="text-2xl font-bold text-gray-900">Reportes</h1>
         <p className="text-gray-500 mt-1">
           Genera y exporta reportes de horas extras
@@ -368,16 +395,13 @@ const ReportesPage = () => {
       </div>
 
       {/* Selector de tipo de reporte */}
-      <Card>
+      <Card className="rounded-[30px] border border-slate-200 shadow-sm">
         <div className="border-b border-gray-200 mb-6">
           <nav className="-mb-px flex space-x-8">
             {tabs.map(tab => (
               <button
                 key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id);
-                  setReporteData(null);
-                }}
+                onClick={() => handleTabChange(tab.id)}
                 className={`
                   py-2 px-1 border-b-2 font-medium text-sm flex items-center
                   ${activeTab === tab.id
@@ -407,10 +431,11 @@ const ReportesPage = () => {
 
       {/* Preview del reporte */}
       {reporteData && (
-        <Card>
+        <Card className="rounded-[30px] border border-slate-200 shadow-sm">
           <ReportePreview
             data={reporteData}
             tipo={activeTab}
+            onVerCompleto={verReporteCompleto}
           />
 
           {/* Botones de exportación */}

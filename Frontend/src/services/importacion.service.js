@@ -1,4 +1,4 @@
-import { get, post, uploadFile, downloadFile } from './api';
+import { get, post, del, uploadFile, downloadFile } from './api';
 
 // ============================================
 // SERVICIO DE IMPORTACIÓN DE EXCEL
@@ -13,16 +13,17 @@ export const importacionService = {
   // ========================================
   importar: async (archivo, mapeo = {}, onProgress = null) => {
     try {
-      console.log('📤 importacion.service.importar - archivo:', archivo?.name);
+      console.log('importacion.service.importar - archivo:', archivo?.name);
       
       const formData = new FormData();
       formData.append('archivo', archivo);
       formData.append('mapeo', JSON.stringify(mapeo));
 
       const response = await uploadFile(BASE_URL, formData, onProgress);
-      return response.data;
+      // Backend returns { success, data: { id, totalRegistros, ... }, message }
+      return response.data.data || response.data;
     } catch (error) {
-      console.error('❌ Error en importar:', error);
+      console.error('Error en importar:', error);
       throw error;
     }
   },
@@ -96,6 +97,10 @@ export const importacionService = {
       const response = await get(`${BASE_URL}/${id}/registros`, filtros);
       return response.data.data || response.data;
     } catch (error) {
+      if (error.response?.status === 404) {
+        const importacion = await importacionService.obtenerPorId(id);
+        return importacion.registros || [];
+      }
       throw error;
     }
   },
@@ -108,6 +113,9 @@ export const importacionService = {
       const response = await get(`${BASE_URL}/${id}/errores`);
       return response.data.data || response.data;
     } catch (error) {
+      if (error.response?.status === 404) {
+        return [];
+      }
       throw error;
     }
   },

@@ -7,10 +7,133 @@ import { TIPOS_REGISTRO, ORIGENES_DATOS } from '../utils/constants.js';
 class RegistroAsistenciaRepository extends BaseRepository {
   constructor() {
     super('RegistrosAsistencia', RegistroAsistencia);
-    
-    // Valores por defecto para horas (ya no se usan, pero mantenemos por si acaso)
-    this.HORARIO_DEFAULT_ENTRADA = '08:30';
-    this.HORARIO_DEFAULT_SALIDA = '17:30';
+  }
+
+  async findAllFiltered(filtros = {}) {
+    try {
+      const pagina = Math.max(parseInt(filtros.pagina, 10) || 1, 1);
+      const limite = Math.min(Math.max(parseInt(filtros.limite, 10) || 20, 1), 100);
+      const offset = (pagina - 1) * limite;
+
+      const pool = await getConnection();
+      const request = pool.request()
+        .input('Offset', TYPES.Int, offset)
+        .input('Limite', TYPES.Int, limite);
+
+      const where = ['1 = 1'];
+
+      if (filtros.fechaInicio) {
+        request.input('FechaInicio', TYPES.NVarChar, filtros.fechaInicio);
+        where.push('CONVERT(VARCHAR(10), ra.Fecha, 23) >= @FechaInicio');
+      }
+
+      if (filtros.fechaFin) {
+        request.input('FechaFin', TYPES.NVarChar, filtros.fechaFin);
+        where.push('CONVERT(VARCHAR(10), ra.Fecha, 23) <= @FechaFin');
+      }
+
+      if (filtros.fecha) {
+        request.input('Fecha', TYPES.NVarChar, filtros.fecha);
+        where.push('CONVERT(VARCHAR(10), ra.Fecha, 23) = @Fecha');
+      }
+
+      if (filtros.tipo) {
+        request.input('TipoRegistro', TYPES.NVarChar, filtros.tipo);
+        where.push('ra.TipoRegistro = @TipoRegistro');
+      }
+
+      if (filtros.search) {
+        request.input('Search', TYPES.NVarChar, `%${String(filtros.search).trim()}%`);
+        where.push(`(
+          e.Codigo LIKE @Search
+          OR e.Nombre LIKE @Search
+          OR e.Apellido LIKE @Search
+          OR CONCAT(e.Nombre, ' ', e.Apellido) LIKE @Search
+        )`);
+      }
+
+      if (filtros.empleadoId) {
+        const empleadoFiltro = String(filtros.empleadoId).trim();
+        if (/^\d+$/.test(empleadoFiltro)) {
+          request.input('EmpleadoId', TYPES.Int, parseInt(empleadoFiltro, 10));
+          where.push('ra.EmpleadoId = @EmpleadoId');
+        } else {
+          request.input('EmpleadoFiltro', TYPES.NVarChar, `%${empleadoFiltro}%`);
+          where.push(`(
+            e.Codigo LIKE @EmpleadoFiltro
+            OR e.Nombre LIKE @EmpleadoFiltro
+            OR e.Apellido LIKE @EmpleadoFiltro
+            OR CONCAT(e.Nombre, ' ', e.Apellido) LIKE @EmpleadoFiltro
+          )`);
+        }
+      }
+
+      const whereClause = where.join(' AND ');
+      const fromClause = `
+        FROM RegistrosAsistencia ra
+        INNER JOIN Empleados e ON e.Id = ra.EmpleadoId
+        LEFT JOIN (
+          SELECT
+            ch.RegistroAsistenciaId,
+            SUM(CASE WHEN th.Codigo = '35%' THEN ch.Horas ELSE 0 END) as he35,
+            SUM(CASE WHEN th.Codigo = '100%' THEN ch.Horas ELSE 0 END) as he100,
+            SUM(CASE WHEN th.Codigo = '15%' THEN ch.Horas ELSE 0 END) as he15,
+            SUM(CASE WHEN th.Codigo = 'FERIADO' THEN ch.Horas ELSE 0 END) as heFeriado,
+            SUM(ch.Horas) as totalHoras,
+            SUM(ch.Monto) as totalPagar
+          FROM CalculosHorasExtras ch
+          INNER JOIN TiposHorasExtras th ON th.Id = ch.TipoHEId
+          GROUP BY ch.RegistroAsistenciaId
+        ) calc ON calc.RegistroAsistenciaId = ra.Id
+      `;
+
+      const countResult = await request.query(`
+        SELECT COUNT(*) as Total
+        ${fromClause}
+        WHERE ${whereClause}
+      `);
+
+      const dataResult = await request.query(`
+        SELECT
+          ra.Id as id,
+          ra.EmpleadoId as empleadoId,
+          ra.ImportacionId as importacionId,
+          ra.Fecha as fecha,
+          CONVERT(VARCHAR(5), ra.HoraEntrada, 108) as horaEntrada,
+          CONVERT(VARCHAR(5), ra.HoraSalida, 108) as horaSalida,
+          ra.TipoRegistro as tipoRegistro,
+          ra.Origen as origen,
+          ra.Comentarios as comentarios,
+          ra.FilaExcel as filaExcel,
+          CAST(ra.Procesado as bit) as procesado,
+          ra.FechaProcesado as fechaProcesado,
+          ra.FechaCreacion as fechaCreacion,
+          ra.FechaActualizacion as fechaActualizacion,
+          CONCAT(e.Nombre, ' ', e.Apellido) as empleadoNombre,
+          e.Codigo as codigoEmpleado,
+          ISNULL(calc.he35, 0) as he35,
+          ISNULL(calc.he100, 0) as he100,
+          ISNULL(calc.he15, 0) as he15,
+          ISNULL(calc.heFeriado, 0) as heFeriado,
+          ISNULL(calc.totalHoras, 0) as totalHoras,
+          ISNULL(calc.totalPagar, 0) as totalPagar
+        ${fromClause}
+        WHERE ${whereClause}
+        ORDER BY ra.Fecha DESC, ra.Id DESC
+        OFFSET @Offset ROWS
+        FETCH NEXT @Limite ROWS ONLY
+      `);
+
+      return {
+        data: dataResult.recordset,
+        total: countResult.recordset[0]?.Total || 0,
+        pagina,
+        limite,
+        pages: Math.max(Math.ceil((countResult.recordset[0]?.Total || 0) / limite), 1)
+      };
+    } catch (error) {
+      throw new Error(`Error al listar registros: ${error.message}`);
+    }
   }
 
   /**
@@ -46,13 +169,13 @@ class RegistroAsistenciaRepository extends BaseRepository {
       `;
       
       if (fechaInicio) {
-        request.input('FechaInicio', TYPES.Date, fechaInicio);
-        query += ' AND Fecha >= @FechaInicio';
+        request.input('FechaInicio', TYPES.NVarChar, fechaInicio);
+        query += ' AND CONVERT(VARCHAR(10), Fecha, 23) >= @FechaInicio';
       }
       
       if (fechaFin) {
-        request.input('FechaFin', TYPES.Date, fechaFin);
-        query += ' AND Fecha <= @FechaFin';
+        request.input('FechaFin', TYPES.NVarChar, fechaFin);
+        query += ' AND CONVERT(VARCHAR(10), Fecha, 23) <= @FechaFin';
       }
       
       query += ' ORDER BY Fecha DESC';
@@ -121,42 +244,41 @@ class RegistroAsistenciaRepository extends BaseRepository {
   /**
    * Buscar registros (TODOS, no solo pendientes)
    */
- // En RegistroAsistenciaRepository.js - findPendientes
-async findPendientes(pagina = 1, limite = 20) {
-  try {
-    console.log(`🔍 Buscando registros - página: ${pagina}, límite: ${limite}`);
-    
-    const pool = await getConnection();
-    const offset = (pagina - 1) * limite;
-    
-    // Consulta temporal para ver total
-    const totalQuery = await pool.request()
-      .query('SELECT COUNT(*) as Total FROM RegistrosAsistencia');
-    console.log(`📊 Total en BD: ${totalQuery.recordset[0].Total}`);
-    
-    const result = await pool.request()
-      .input('Offset', TYPES.Int, offset)
-      .input('Limite', TYPES.Int, limite)
-      .query(`
-        SELECT * FROM RegistrosAsistencia 
-        ORDER BY Fecha DESC
-        OFFSET @Offset ROWS
-        FETCH NEXT @Limite ROWS ONLY
-      `);
-    
-    console.log(`✅ Registros encontrados: ${result.recordset.length}`);
-    
-    return {
-      data: result.recordset,
-      total: totalQuery.recordset[0].Total,
-      pagina: parseInt(pagina),
-      limite: parseInt(limite)
-    };
-  } catch (error) {
-    console.error('❌ Error:', error);
-    throw error;
+  async findPendientes(pagina = 1, limite = 20) {
+    try {
+      const pool = await getConnection();
+      const offset = (pagina - 1) * limite;
+      
+      const countResult = await pool.request()
+        .query('SELECT COUNT(*) as Total FROM RegistrosAsistencia');
+      
+      const result = await pool.request()
+        .input('Offset', TYPES.Int, offset)
+        .input('Limite', TYPES.Int, limite)
+        .query(`
+          SELECT 
+            Id, EmpleadoId, ImportacionId, Fecha,
+            CONVERT(VARCHAR(5), HoraEntrada, 108) as HoraEntrada,
+            CONVERT(VARCHAR(5), HoraSalida, 108) as HoraSalida,
+            TipoRegistro, Origen, Comentarios, FilaExcel,
+            Procesado, FechaProcesado, FechaCreacion,
+            UsuarioCreacion, FechaActualizacion, UsuarioActualizacion
+          FROM RegistrosAsistencia 
+          ORDER BY Fecha DESC
+          OFFSET @Offset ROWS
+          FETCH NEXT @Limite ROWS ONLY
+        `);
+      
+      return {
+        data: result.recordset.map(row => new RegistroAsistencia(row)),
+        total: countResult.recordset[0].Total,
+        pagina: parseInt(pagina),
+        limite: parseInt(limite)
+      };
+    } catch (error) {
+      throw new Error(`Error al buscar registros: ${error.message}`);
+    }
   }
-}
 
   /**
    * Buscar registros pendientes (solo no procesados)
@@ -225,7 +347,7 @@ async findPendientes(pagina = 1, limite = 20) {
       const offset = (pagina - 1) * limite;
       
       const result = await pool.request()
-        .input('Fecha', TYPES.Date, fecha)
+        .input('Fecha', TYPES.NVarChar, fecha)
         .input('Offset', TYPES.Int, offset)
         .input('Limite', TYPES.Int, limite)
         .query(`
@@ -247,15 +369,15 @@ async findPendientes(pagina = 1, limite = 20) {
             FechaActualizacion,
             UsuarioActualizacion
           FROM RegistrosAsistencia 
-          WHERE Fecha = @Fecha
+          WHERE CONVERT(VARCHAR(10), Fecha, 23) = @Fecha
           ORDER BY EmpleadoId
           OFFSET @Offset ROWS
           FETCH NEXT @Limite ROWS ONLY
         `);
       
       const countResult = await pool.request()
-        .input('Fecha', TYPES.Date, fecha)
-        .query('SELECT COUNT(*) as Total FROM RegistrosAsistencia WHERE Fecha = @Fecha');
+        .input('Fecha', TYPES.NVarChar, fecha)
+        .query('SELECT COUNT(*) as Total FROM RegistrosAsistencia WHERE CONVERT(VARCHAR(10), Fecha, 23) = @Fecha');
       
       return {
         data: result.recordset.map(row => {
@@ -283,8 +405,8 @@ async findPendientes(pagina = 1, limite = 20) {
     try {
       const pool = await getConnection();
       const request = pool.request()
-        .input('FechaInicio', TYPES.Date, fechaInicio)
-        .input('FechaFin', TYPES.Date, fechaFin);
+        .input('FechaInicio', TYPES.NVarChar, fechaInicio)
+        .input('FechaFin', TYPES.NVarChar, fechaFin);
       
       let query = `
         SELECT 
@@ -305,7 +427,7 @@ async findPendientes(pagina = 1, limite = 20) {
           FechaActualizacion,
           UsuarioActualizacion
         FROM RegistrosAsistencia 
-        WHERE Fecha BETWEEN @FechaInicio AND @FechaFin
+        WHERE CONVERT(VARCHAR(10), Fecha, 23) BETWEEN @FechaInicio AND @FechaFin
       `;
       
       if (empleadoId) {
@@ -337,8 +459,8 @@ async findPendientes(pagina = 1, limite = 20) {
     try {
       const pool = await getConnection();
       const result = await pool.request()
-        .input('FechaInicio', TYPES.Date, fechaInicio)
-        .input('FechaFin', TYPES.Date, fechaFin)
+        .input('FechaInicio', TYPES.NVarChar, fechaInicio)
+        .input('FechaFin', TYPES.NVarChar, fechaFin)
         .query(`
           SELECT 
             Id,
@@ -358,7 +480,7 @@ async findPendientes(pagina = 1, limite = 20) {
             FechaActualizacion,
             UsuarioActualizacion
           FROM RegistrosAsistencia 
-          WHERE Fecha BETWEEN @FechaInicio AND @FechaFin
+          WHERE CONVERT(VARCHAR(10), Fecha, 23) BETWEEN @FechaInicio AND @FechaFin
           AND Procesado = 0
           ORDER BY Fecha, EmpleadoId
         `);
@@ -424,15 +546,14 @@ async findPendientes(pagina = 1, limite = 20) {
   }
 
   /**
-   * Crear registro manual (sin valores por defecto)
+   * Crear registro manual
    */
   async crearManual(empleadoId, fecha, horaEntrada, horaSalida, comentarios, usuario) {
-    // ✅ NO asignar horas por defecto - respetar lo que viene
     return await this.create({
       EmpleadoId: empleadoId,
       Fecha: fecha,
-      HoraEntrada: horaEntrada,  // Puede ser null
-      HoraSalida: horaSalida,    // Puede ser null
+      HoraEntrada: horaEntrada,
+      HoraSalida: horaSalida,
       TipoRegistro: TIPOS_REGISTRO.MANUAL,
       Origen: ORIGENES_DATOS.MANUAL,
       Comentarios: comentarios,
@@ -441,7 +562,7 @@ async findPendientes(pagina = 1, limite = 20) {
   }
 
   /**
-   * Crear registros desde importación (respetando horas originales)
+   * Crear registros desde importacion
    */
   async crearDesdeImportacion(importacionId, registrosData) {
     const resultados = [];
@@ -449,18 +570,15 @@ async findPendientes(pagina = 1, limite = 20) {
     
     for (const data of registrosData) {
       try {
-        // ✅ NO asignar horas por defecto - respetar las originales
         const registroData = {
           ...data,
           ImportacionId: importacionId,
           TipoRegistro: TIPOS_REGISTRO.IMPORTADO,
           Origen: ORIGENES_DATOS.EXCEL,
-          // Mantener las horas como vienen (pueden ser null)
           HoraEntrada: data.HoraEntrada,
           HoraSalida: data.HoraSalida
         };
         
-        // Opcional: agregar comentario si faltan horas
         if (!data.HoraEntrada || !data.HoraSalida) {
           registroData.Comentarios = `Registro con horas incompletas. Entrada: ${data.HoraEntrada || 'N/A'}, Salida: ${data.HoraSalida || 'N/A'}`;
         }
@@ -532,16 +650,21 @@ async findPendientes(pagina = 1, limite = 20) {
     
     try {
       const pool = await getConnection();
-      const idsList = ids.join(',');
+      const request = pool.request();
+      request.input('Usuario', TYPES.NVarChar, usuario);
       
-      const result = await pool.request()
-        .input('Usuario', TYPES.NVarChar, usuario)
-        .query(`
+      // Parametrizar cada ID para evitar SQL injection
+      const idParams = ids.map((id, i) => {
+        const paramName = `Id${i}`;
+        request.input(paramName, TYPES.Int, id);
+        return `@${paramName}`;
+      });
+      
+      const result = await request.query(`
           UPDATE RegistrosAsistencia 
           SET Procesado = 1,
               FechaProcesado = GETDATE(),
               UsuarioActualizacion = @Usuario
-          WHERE Id IN (${idsList})
           OUTPUT 
             INSERTED.Id,
             INSERTED.EmpleadoId,
@@ -559,6 +682,7 @@ async findPendientes(pagina = 1, limite = 20) {
             INSERTED.UsuarioCreacion,
             INSERTED.FechaActualizacion,
             INSERTED.UsuarioActualizacion
+          WHERE Id IN (${idParams.join(',')})
         `);
       
       return result.recordset.map(row => {
@@ -583,8 +707,8 @@ async findPendientes(pagina = 1, limite = 20) {
       const pool = await getConnection();
       const result = await pool.request()
         .input('EmpleadoId', TYPES.Int, empleadoId)
-        .input('FechaInicio', TYPES.Date, fechaInicio)
-        .input('FechaFin', TYPES.Date, fechaFin)
+        .input('FechaInicio', TYPES.NVarChar, fechaInicio)
+        .input('FechaFin', TYPES.NVarChar, fechaFin)
         .query(`
           SELECT 
             COUNT(*) as TotalRegistros,
@@ -600,7 +724,7 @@ async findPendientes(pagina = 1, limite = 20) {
             ) as PromedioHoras
           FROM RegistrosAsistencia
           WHERE EmpleadoId = @EmpleadoId
-          AND Fecha BETWEEN @FechaInicio AND @FechaFin
+          AND CONVERT(VARCHAR(10), Fecha, 23) BETWEEN @FechaInicio AND @FechaFin
         `);
       
       return result.recordset[0];
@@ -616,8 +740,8 @@ async findPendientes(pagina = 1, limite = 20) {
     try {
       const pool = await getConnection();
       const result = await pool.request()
-        .input('FechaInicio', TYPES.Date, fechaInicio)
-        .input('FechaFin', TYPES.Date, fechaFin)
+        .input('FechaInicio', TYPES.NVarChar, fechaInicio)
+        .input('FechaFin', TYPES.NVarChar, fechaFin)
         .query(`
           SELECT 
             Fecha,
@@ -625,7 +749,7 @@ async findPendientes(pagina = 1, limite = 20) {
             SUM(CASE WHEN HoraEntrada IS NOT NULL AND HoraSalida IS NOT NULL THEN 1 ELSE 0 END) as Completos,
             SUM(CASE WHEN HoraEntrada IS NULL OR HoraSalida IS NULL THEN 1 ELSE 0 END) as Incompletos
           FROM RegistrosAsistencia
-          WHERE Fecha BETWEEN @FechaInicio AND @FechaFin
+          WHERE CONVERT(VARCHAR(10), Fecha, 23) BETWEEN @FechaInicio AND @FechaFin
           GROUP BY Fecha
           ORDER BY Fecha
         `);
@@ -639,16 +763,41 @@ async findPendientes(pagina = 1, limite = 20) {
   /**
    * Verificar si existe registro para empleado en fecha
    */
+  async deleteByEmpleadoYFecha(empleadoId, fecha) {
+    try {
+      const pool = await getConnection();
+      await pool.request()
+        .input('EmpleadoId', TYPES.Int, empleadoId)
+        .input('Fecha', TYPES.NVarChar, fecha)
+        .query("DELETE FROM RegistrosAsistencia WHERE EmpleadoId = @EmpleadoId AND CONVERT(VARCHAR(10), Fecha, 23) = @Fecha");
+    } catch (error) {
+      // Ignorar - puede no existir
+    }
+  }
+
+  async findByEmpleadoYFecha(empleadoId, fecha) {
+    try {
+      const pool = await getConnection();
+      const result = await pool.request()
+        .input('EmpleadoId', TYPES.Int, empleadoId)
+        .input('Fecha', TYPES.NVarChar, fecha)
+        .query("SELECT TOP 1 * FROM RegistrosAsistencia WHERE EmpleadoId = @EmpleadoId AND CONVERT(VARCHAR(10), Fecha, 23) = @Fecha");
+      return result.recordset[0] || null;
+    } catch (error) {
+      throw new Error(`Error al buscar registro por empleado y fecha: ${error.message}`);
+    }
+  }
+
   async existeRegistro(empleadoId, fecha, excludeId = null) {
     try {
       const pool = await getConnection();
       const request = pool.request()
         .input('EmpleadoId', TYPES.Int, empleadoId)
-        .input('Fecha', TYPES.Date, fecha);
+        .input('Fecha', TYPES.NVarChar, fecha);
       
       let query = `
         SELECT COUNT(*) as Total FROM RegistrosAsistencia 
-        WHERE EmpleadoId = @EmpleadoId AND Fecha = @Fecha
+        WHERE EmpleadoId = @EmpleadoId AND CONVERT(VARCHAR(10), Fecha, 23) = @Fecha
       `;
       
       if (excludeId) {
@@ -663,13 +812,6 @@ async findPendientes(pagina = 1, limite = 20) {
     }
   }
 
-  /**
-   * Actualizar registro - SIN valores por defecto
-   */
-  async update(id, data) {
-    // ❌ NO asignar valores por defecto - respetar lo que viene
-    return await super.update(id, data);
-  }
 }
 
 export default new RegistroAsistenciaRepository();

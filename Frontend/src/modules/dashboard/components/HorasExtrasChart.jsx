@@ -1,4 +1,4 @@
-import React, { useState } from 'react';  // ← IMPORTAR useState
+import React, { useState } from 'react';
 import {
   BarChart,
   Bar,
@@ -12,7 +12,7 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { Card, Spinner, Tabs } from '../../../components/common';
+import { Card, Spinner } from '../../../components/common';
 import { formatearHoras } from '../../../utils';
 
 // ============================================
@@ -20,25 +20,21 @@ import { formatearHoras } from '../../../utils';
 // Gráficos de distribución de horas extras
 // ============================================
 
-const HorasExtrasChart = ({ data, loading }) => {
-  const [activeTab, setActiveTab] = useState('barras');  // ← AHORA SÍ FUNCIONA
+const HorasExtrasChart = ({ data, loading, tieneQuincenas }) => {
+  const [activeTab, setActiveTab] = useState('barras');
 
-  // ========================================
-  // DATOS PARA GRÁFICOS
-  // ========================================
-  const barData = data?.porDia || [];
-  const pieData = data?.porTipo || [
-    { name: '35%', value: 0, color: '#3B82F6' },
-    { name: '100%', value: 0, color: '#10B981' },
-    { name: '15%', value: 0, color: '#F59E0B' },
-    { name: 'Feriado', value: 0, color: '#EF4444' }
-  ];
+  const barData = (data?.porDia || []).map((item) => ({
+    ...item,
+    he35: item.he35 ?? item['35%'] ?? item['HE 35%'] ?? 0,
+    he100: item.he100 ?? item['100%'] ?? item['HE 100%'] ?? 0,
+    he15: item.he15 ?? item['15%'] ?? item['HE 15%'] ?? 0,
+    feriado: item.feriado ?? item['Feriado'] ?? item.heFeriado ?? 0
+  }));
+  const pieData = data?.porTipo || [];
+  const hasPieData = pieData.some(item => item.value > 0);
 
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
 
-  // ========================================
-  // CUSTOM TOOLTIP
-  // ========================================
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
@@ -51,7 +47,7 @@ const HorasExtrasChart = ({ data, loading }) => {
                 style={{ backgroundColor: entry.color }}
               />
               <span className="text-gray-600 mr-2">{entry.name}:</span>
-              <span className="font-medium">{formatearHoras(entry.value)}</span>
+              <span className="font-medium">{tieneQuincenas ? formatearHoras(entry.value) : entry.value}</span>
             </div>
           ))}
         </div>
@@ -91,12 +87,12 @@ const HorasExtrasChart = ({ data, loading }) => {
   }
 
   const tabs = [
-    { id: 'barras', label: 'Por Día' },
-    { id: 'pastel', label: 'Por Tipo' }
+    { id: 'barras', label: tieneQuincenas ? 'Horas por Dia' : 'Registros por Dia' },
+    ...(hasPieData ? [{ id: 'pastel', label: 'Por Tipo' }] : [])
   ];
 
   return (
-    <Card title="Distribución de Horas Extras">
+    <Card title={tieneQuincenas ? 'Distribucion de Horas Extras' : 'Actividad de Registros'}>
       {/* Tabs */}
       <div className="border-b border-gray-200 mb-4">
         <nav className="-mb-px flex space-x-4">
@@ -118,7 +114,7 @@ const HorasExtrasChart = ({ data, loading }) => {
         </nav>
       </div>
 
-      {/* Gráfico de barras */}
+      {/* Grafico de barras */}
       {activeTab === 'barras' && (
         <div style={{ width: '100%', height: 300 }}>
           {barData.length > 0 ? (
@@ -134,14 +130,23 @@ const HorasExtrasChart = ({ data, loading }) => {
                 />
                 <YAxis 
                   tick={{ fill: '#6B7280', fontSize: 12 }}
-                  tickFormatter={(value) => `${value} hrs`}
+                  tickFormatter={tieneQuincenas ? (v) => `${v} hrs` : undefined}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend />
-                <Bar dataKey="35%" stackId="a" fill="#3B82F6" name="35%" />
-                <Bar dataKey="100%" stackId="a" fill="#10B981" name="100%" />
-                <Bar dataKey="15%" stackId="a" fill="#F59E0B" name="15%" />
-                <Bar dataKey="feriado" stackId="a" fill="#EF4444" name="Feriado" />
+                {tieneQuincenas ? (
+                  <>
+                    <Bar dataKey="he35" stackId="a" fill="#3B82F6" name="35%" />
+                    <Bar dataKey="he100" stackId="a" fill="#10B981" name="100%" />
+                    <Bar dataKey="he15" stackId="a" fill="#F59E0B" name="15%" />
+                    <Bar dataKey="feriado" stackId="a" fill="#EF4444" name="Feriado" />
+                  </>
+                ) : (
+                  <>
+                    <Bar dataKey="Registros" fill="#3B82F6" name="Registros" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Empleados" fill="#10B981" name="Empleados" radius={[4, 4, 0, 0]} />
+                  </>
+                )}
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -152,55 +157,64 @@ const HorasExtrasChart = ({ data, loading }) => {
         </div>
       )}
 
-      {/* Gráfico de pastel */}
-      {activeTab === 'pastel' && (
+      {/* Grafico de pastel */}
+      {activeTab === 'pastel' && hasPieData && (
         <div style={{ width: '100%', height: 300 }}>
-          {pieData.some(item => item.value > 0) ? (
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<PieTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex items-center justify-center h-[300px] text-gray-500">
-              No hay datos para mostrar
-            </div>
-          )}
+          <ResponsiveContainer>
+            <PieChart>
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip content={<PieTooltip />} />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
       )}
 
-      {/* Leyenda de colores */}
+      {/* Leyenda */}
       <div className="flex justify-center space-x-6 mt-4 pt-4 border-t border-gray-200">
-        <div className="flex items-center">
-          <div className="w-3 h-3 bg-blue-500 rounded-full mr-2" />
-          <span className="text-xs text-gray-600">35%</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-3 h-3 bg-green-500 rounded-full mr-2" />
-          <span className="text-xs text-gray-600">100%</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2" />
-          <span className="text-xs text-gray-600">15%</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-3 h-3 bg-red-500 rounded-full mr-2" />
-          <span className="text-xs text-gray-600">Feriado</span>
-        </div>
+        {tieneQuincenas ? (
+          <>
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-blue-500 rounded-full mr-2" />
+              <span className="text-xs text-gray-600">35%</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-green-500 rounded-full mr-2" />
+              <span className="text-xs text-gray-600">100%</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2" />
+              <span className="text-xs text-gray-600">15%</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-red-500 rounded-full mr-2" />
+              <span className="text-xs text-gray-600">Feriado</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-blue-500 rounded-full mr-2" />
+              <span className="text-xs text-gray-600">Registros</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-green-500 rounded-full mr-2" />
+              <span className="text-xs text-gray-600">Empleados</span>
+            </div>
+          </>
+        )}
       </div>
     </Card>
   );

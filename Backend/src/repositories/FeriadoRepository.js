@@ -2,6 +2,7 @@
 import BaseRepository from './BaseRepository.js';
 import Feriado from '../models/Feriado.model.js';
 import { getConnection, TYPES } from '../config/database.js';
+import moment from 'moment';
 
 class FeriadoRepository extends BaseRepository {
   constructor() {
@@ -34,10 +35,10 @@ class FeriadoRepository extends BaseRepository {
    */
   async esFeriado(fecha) {
     try {
-      const date = new Date(fecha);
-      const dia = date.getDate();
-      const mes = date.getMonth() + 1;
-      const anio = date.getFullYear();
+      const date = moment.utc(fecha);
+      const dia = date.date();
+      const mes = date.month() + 1;
+      const anio = date.year();
       
       const pool = await getConnection();
       const result = await pool.request()

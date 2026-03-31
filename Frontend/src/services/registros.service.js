@@ -8,41 +8,20 @@ const BASE_URL = '/registros';
 
 export const registrosService = {
   // ========================================
-  // OBTENER TODOS LOS REGISTROS - Usando múltiples estrategias
+  // OBTENER TODOS LOS REGISTROS
   // ========================================
   obtenerTodos: async (filtros = {}) => {
     try {
-      let response;
-      
-      // Estrategia 1: Si hay empleadoId, usar /registros/empleado/{id}
-      if (filtros.empleadoId) {
-        response = await get(`${BASE_URL}/empleado/${filtros.empleadoId}`, filtros);
-      }
-      // Estrategia 2: Si hay fecha, usar /registros/empleado? (no existe) o pendientes
-      else if (filtros.fecha) {
-        // Podrías implementar un endpoint específico o usar pendientes
-        response = await get(`${BASE_URL}/pendientes`, filtros);
-      }
-      // Estrategia 3: Por defecto, obtener pendientes
-      else {
-        response = await get(`${BASE_URL}/pendientes`, filtros);
-      }
+      const response = await get(`${BASE_URL}`, filtros);
       
       return {
-        data: response.data.data || response.data || [],
-        total: response.data.total || (response.data.data || response.data || []).length,
-        totalPaginas: response.data.totalPaginas || 1,
-        pagina: response.data.pagina || 1
+        data: response.data.data || [],
+        total: response.data.pagination?.total || 0,
+        totalPaginas: response.data.pagination?.pages || 1,
+        pagina: response.data.pagination?.page || 1
       };
     } catch (error) {
-      console.warn('Error en obtenerTodos, usando datos vacíos:', error);
-      // Fallback: devolver array vacío en lugar de lanzar error
-      return {
-        data: [],
-        total: 0,
-        totalPaginas: 1,
-        pagina: 1
-      };
+      throw error;
     }
   },
 
@@ -75,9 +54,7 @@ export const registrosService = {
   // ========================================
   obtenerPorFecha: async (fecha, filtros = {}) => {
     try {
-      // Como no existe, obtenemos pendientes y filtramos (o llamamos a otro endpoint)
-      const response = await get(`${BASE_URL}/pendientes`, { ...filtros, fecha });
-      return response.data.data || response.data;
+      return await registrosService.obtenerTodos({ ...filtros, fecha });
     } catch (error) {
       throw error;
     }

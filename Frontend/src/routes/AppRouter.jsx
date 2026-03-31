@@ -118,6 +118,21 @@ const AppRouter = () => {
             <ReportesPage />
           </MainLayout>
         } />
+        <Route path="quincenal" element={
+          <MainLayout>
+            <ReportesPage />
+          </MainLayout>
+        } />
+        <Route path="empleado" element={
+          <MainLayout>
+            <ReportesPage />
+          </MainLayout>
+        } />
+        <Route path="comparativo" element={
+          <MainLayout>
+            <ReportesPage />
+          </MainLayout>
+        } />
         <Route path="generado" element={
           <MainLayout>
             <ReporteGeneradoPage />

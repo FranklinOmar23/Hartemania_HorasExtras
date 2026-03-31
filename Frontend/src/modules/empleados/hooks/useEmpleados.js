@@ -2,17 +2,12 @@ import { useState, useCallback } from 'react';
 import { empleadosService } from '../../../services';
 import { useUIStore } from '../../../store';
 
-// ============================================
-// HOOK PERSONALIZADO PARA EMPLEADOS
-// ============================================
-
 export const useEmpleados = () => {
   const [empleados, setEmpleados] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const { showToast } = useUIStore();
 
-  // Estado de filtros y paginación
   const [filtros, setFiltrosState] = useState({
     search: '',
     departamento: '',
@@ -28,90 +23,67 @@ export const useEmpleados = () => {
     pageSizeOptions: [10, 20, 30, 50, 100]
   });
 
-  // ========================================
-  // OBTENER EMPLEADOS
-  // ========================================
   const fetchEmpleados = useCallback(async (params = {}) => {
-  setLoading(true);
-  setError(null);
+    setLoading(true);
+    setError(null);
 
-  try {
-    const response = await empleadosService.obtenerTodos({
-      ...filtros,
-      ...params
-    });
+    try {
+      const response = await empleadosService.obtenerTodos({
+        ...filtros,
+        ...params
+      });
 
-    console.log('Respuesta procesada:', response); // Para debug
+      setEmpleados(response.data || []);
+      setPaginacion((prev) => ({
+        ...prev,
+        totalItems: response.total || 0,
+        totalPages: response.totalPaginas || 1,
+        currentPage: params.pagina || response.pagina || prev.currentPage,
+        pageSize: params.limite || prev.pageSize
+      }));
 
-    setEmpleados(response.data || []);
-    setPaginacion(prev => ({
-      ...prev,
-      totalItems: response.total || 0,
-      totalPages: response.totalPaginas || 1,
-      currentPage: params.pagina || response.pagina || prev.currentPage,
-      pageSize: params.limite || prev.pageSize
-    }));
-  } catch (err) {
-    setError(err.message);
-    showToast({
-      type: 'error',
-      message: 'Error al cargar empleados'
-    });
-  } finally {
-    setLoading(false);
-  }
-}, [filtros, showToast]);
+      return response;
+    } catch (err) {
+      setError(err.message);
+      showToast({
+        type: 'error',
+        message: 'Error al cargar empleados'
+      });
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [filtros, showToast]);
 
-  // ========================================
-  // ACTUALIZAR FILTROS
-  // ========================================
   const setFiltros = useCallback((nuevosFiltros) => {
-    setFiltrosState(prev => ({
+    setFiltrosState((prev) => ({
       ...prev,
       ...nuevosFiltros
     }));
-    // Opcional: Recargar automáticamente al cambiar filtros
-    // fetchEmpleados({ pagina: 1, ...nuevosFiltros });
+    setPaginacion((prev) => ({
+      ...prev,
+      currentPage: 1
+    }));
   }, []);
 
-  // ========================================
-  // CAMBIAR PÁGINA - CORREGIDO ✅
-  // ========================================
   const cambiarPagina = useCallback((nuevaPagina) => {
-    setPaginacion(prev => ({
+    setPaginacion((prev) => ({
       ...prev,
       currentPage: nuevaPagina
     }));
-    // 👉 Recargar datos con la nueva página
-    fetchEmpleados({ 
-      pagina: nuevaPagina, 
-      limite: paginacion.pageSize 
-    });
-  }, [fetchEmpleados, paginacion.pageSize]);
+  }, []);
 
-  // ========================================
-  // CAMBIAR TAMAÑO DE PÁGINA - CORREGIDO ✅
-  // ========================================
   const cambiarPageSize = useCallback((nuevoSize) => {
-    setPaginacion(prev => ({
+    setPaginacion((prev) => ({
       ...prev,
       pageSize: nuevoSize,
       currentPage: 1
     }));
-    // 👉 Recargar datos con nuevo tamaño
-    fetchEmpleados({ 
-      pagina: 1, 
-      limite: nuevoSize 
-    });
-  }, [fetchEmpleados]);
+  }, []);
 
-  // ========================================
-  // OTRAS FUNCIONES (sin cambios)
-  // ========================================
   const obtenerEmpleadoPorId = useCallback(async (id) => {
     try {
-      const empleado = await empleadosService.obtenerPorId(id);
-      return empleado;
+      return await empleadosService.obtenerPorId(id);
     } catch (err) {
       showToast({
         type: 'error',
@@ -165,7 +137,7 @@ export const useEmpleados = () => {
     setLoading(true);
     try {
       await empleadosService.eliminar(id);
-      setEmpleados(prev => prev.filter(emp => emp.id !== id));
+      setEmpleados((prev) => prev.filter((empleado) => empleado.id !== id));
       showToast({
         type: 'success',
         message: 'Empleado eliminado correctamente'
@@ -181,43 +153,11 @@ export const useEmpleados = () => {
     }
   }, [showToast]);
 
-  // ========================================
-// CARGAR EMPLEADOS AL INICIO
-// ========================================
-const cargarEmpleados = useCallback(async () => {
-  if (empleados.length > 0) return; // Ya están cargados
-  
-  setLoadingEmpleados(true);
-  try {
-    // Usar el nuevo endpoint que devuelve TODOS los empleados
-    const empleadosData = await empleadosService.obtenerTodosActivos();
-    
-    console.log(`✅ Cargados ${empleadosData.length} empleados para caché`);
-    
-    // Crear un mapa para acceso rápido por ID
-    const map = {};
-    empleadosData.forEach(emp => {
-      map[emp.id] = {
-        nombre: `${emp.nombre || ''} ${emp.apellido || ''}`.trim(),
-        codigo: emp.codigo || `EMP${String(emp.id).padStart(3, '0')}`
-      };
-    });
-    
-    setEmpleados(empleadosData);
-    setEmpleadosMap(map);
-    
-  } catch (error) {
-    console.error('Error al cargar empleados:', error);
-  } finally {
-    setLoadingEmpleados(false);
-  }
-}, [empleados.length]);
-
   const eliminarMultiples = useCallback(async (ids) => {
     setLoading(true);
     try {
-      await empleadosService.eliminarMultiples(ids);
-      setEmpleados(prev => prev.filter(emp => !ids.includes(emp.id)));
+      await Promise.all(ids.map((id) => empleadosService.eliminar(id)));
+      setEmpleados((prev) => prev.filter((empleado) => !ids.includes(empleado.id)));
       showToast({
         type: 'success',
         message: `${ids.length} empleados eliminados correctamente`
@@ -236,8 +176,7 @@ const cargarEmpleados = useCallback(async () => {
   const buscarEmpleados = useCallback(async (termino) => {
     setLoading(true);
     try {
-      const resultados = await empleadosService.buscar(termino);
-      return resultados;
+      return await empleadosService.buscar(termino);
     } catch (err) {
       showToast({
         type: 'error',
@@ -251,8 +190,7 @@ const cargarEmpleados = useCallback(async () => {
 
   const obtenerEstadisticas = useCallback(async (id) => {
     try {
-      const stats = await empleadosService.obtenerEstadisticas(id);
-      return stats;
+      return await empleadosService.obtenerEstadisticas(id);
     } catch (err) {
       showToast({
         type: 'error',
@@ -262,8 +200,13 @@ const cargarEmpleados = useCallback(async () => {
     }
   }, [showToast]);
 
+  const cargarEmpleados = useCallback(async () => {
+    const empleadosData = await empleadosService.obtenerTodosActivos();
+    setEmpleados(empleadosData || []);
+    return empleadosData;
+  }, []);
+
   return {
-    // Estado
     empleados,
     loading,
     error,
@@ -272,8 +215,6 @@ const cargarEmpleados = useCallback(async () => {
       ...paginacion,
       onPageSizeChange: cambiarPageSize
     },
-
-    // Acciones principales
     fetchEmpleados,
     obtenerEmpleadoPorId,
     crearEmpleado,
@@ -283,7 +224,6 @@ const cargarEmpleados = useCallback(async () => {
     buscarEmpleados,
     obtenerEstadisticas,
     cargarEmpleados,
-    // Acciones de UI
     setFiltros,
     cambiarPagina
   };

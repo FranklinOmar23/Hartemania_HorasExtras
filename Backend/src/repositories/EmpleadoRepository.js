@@ -61,11 +61,11 @@ async findAllActivos() {
     try {
       const pool = await getConnection();
       const result = await pool.request()
-        .input('FechaInicio', TYPES.Date, fechaInicio)
-        .input('FechaFin', TYPES.Date, fechaFin)
+        .input('FechaInicio', TYPES.NVarChar, fechaInicio)
+        .input('FechaFin', TYPES.NVarChar, fechaFin)
         .query(`
           SELECT * FROM Empleados 
-          WHERE FechaIngreso BETWEEN @FechaInicio AND @FechaFin
+          WHERE CONVERT(VARCHAR(10), FechaIngreso, 23) BETWEEN @FechaInicio AND @FechaFin
           AND Activo = 1
           ORDER BY FechaIngreso
         `);

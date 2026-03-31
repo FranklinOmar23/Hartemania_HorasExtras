@@ -59,9 +59,9 @@ const Sidebar = ({ isOpen, onToggle, onMobileClose }) => {
       name: 'Reportes',
       icon: FileText,
       submenu: [
-        { path: '/reportes/quincenal', name: 'Quincenal', icon: BarChart3 },
-        { path: '/reportes/mensual', name: 'Mensual', icon: BarChart3 },
-        { path: '/reportes/anual', name: 'Anual', icon: BarChart3 }
+        { path: '/reportes?tab=quincenal', name: 'Quincenal', icon: BarChart3 },
+        { path: '/reportes?tab=empleado', name: 'Por empleado', icon: Users },
+        { path: '/reportes?tab=comparativo', name: 'Comparativo', icon: BarChart3 }
       ]
     },
     {
@@ -84,21 +84,24 @@ const Sidebar = ({ isOpen, onToggle, onMobileClose }) => {
 
   return (
     <div className={`
-      h-full bg-gradient-to-b from-gray-900 to-gray-800 text-white
+      h-full border-r border-white/10 bg-[linear-gradient(180deg,#0f172a_0%,#111827_48%,#0f172a_100%)] text-white shadow-2xl shadow-slate-950/20
       flex flex-col transition-all duration-300
       ${isOpen ? 'w-64' : 'w-20'}
     `}>
       {/* Logo */}
       <div className={`
-        h-16 flex items-center justify-between px-4 border-b border-gray-700
+        flex h-16 items-center justify-between border-b border-white/10 px-4
         ${!isOpen && 'justify-center'}
       `}>
         {isOpen ? (
           <>
-            <span className="text-xl font-bold text-white">HE System</span>
+            <div>
+              <span className="text-xl font-bold text-white">Hartemania</span>
+              <p className="text-[11px] uppercase tracking-[0.25em] text-slate-400">Overtime</p>
+            </div>
             <button
               onClick={onToggle}
-              className="p-1 rounded-lg hover:bg-gray-700 transition-colors"
+              className="rounded-xl border border-white/10 bg-white/5 p-1 transition-colors hover:bg-white/10"
             >
               <ChevronLeft size={20} />
             </button>
@@ -106,7 +109,7 @@ const Sidebar = ({ isOpen, onToggle, onMobileClose }) => {
         ) : (
           <button
             onClick={onToggle}
-            className="p-1 rounded-lg hover:bg-gray-700 transition-colors"
+            className="rounded-xl border border-white/10 bg-white/5 p-1 transition-colors hover:bg-white/10"
           >
             <ChevronRight size={20} />
           </button>
@@ -124,8 +127,8 @@ const Sidebar = ({ isOpen, onToggle, onMobileClose }) => {
                   <button
                     onClick={() => toggleSubmenu(index)}
                     className={`
-                      w-full flex items-center px-3 py-2 rounded-lg
-                      hover:bg-gray-700 transition-colors
+                      w-full flex items-center rounded-2xl px-3 py-2 transition-colors
+                      hover:bg-white/10
                       ${!isOpen && 'justify-center'}
                     `}
                     title={!isOpen ? item.name : ''}
@@ -156,8 +159,8 @@ const Sidebar = ({ isOpen, onToggle, onMobileClose }) => {
                               flex items-center px-3 py-2 rounded-lg text-sm
                               transition-colors
                               ${isActive 
-                                ? 'bg-blue-600 text-white' 
-                                : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                                ? 'bg-gradient-to-r from-amber-400 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-950/20' 
+                                : 'text-slate-300 hover:bg-white/10 hover:text-white'
                               }
                             `}
                           >
@@ -175,11 +178,11 @@ const Sidebar = ({ isOpen, onToggle, onMobileClose }) => {
                   to={item.path}
                   onClick={onMobileClose}
                   className={({ isActive }) => `
-                    flex items-center px-3 py-2 rounded-lg transition-colors
+                    flex items-center rounded-2xl px-3 py-2 transition-colors
                     ${!isOpen && 'justify-center'}
                     ${isActive 
-                      ? 'bg-blue-600 text-white' 
-                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                      ? 'bg-gradient-to-r from-amber-400 to-emerald-500 text-slate-950 shadow-lg shadow-emerald-950/20' 
+                      : 'text-slate-300 hover:bg-white/10 hover:text-white'
                     }
                   `}
                   title={!isOpen ? item.name : ''}
@@ -195,7 +198,7 @@ const Sidebar = ({ isOpen, onToggle, onMobileClose }) => {
 
       {/* Versión */}
       {isOpen && (
-        <div className="p-4 text-xs text-gray-400 border-t border-gray-700">
+        <div className="border-t border-white/10 p-4 text-xs text-slate-400">
           <p>Versión 1.0.0</p>
           <p className="mt-1">© 2026 Hartemania</p>
         </div>

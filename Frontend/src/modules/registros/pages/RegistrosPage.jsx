@@ -26,6 +26,11 @@ import { saveAs } from 'file-saver';
 const RegistrosPage = () => {
   const navigate = useNavigate();
   const { showToast, openConfirmModal } = useUIStore();
+
+  const formatDateLabel = (value) => {
+    if (!value) return '';
+    return new Date(value).toLocaleDateString();
+  };
   
   // Estado
   const [viewMode, setViewMode] = useState('table'); // 'table' o 'calendar'
@@ -46,6 +51,10 @@ const RegistrosPage = () => {
     cambiarPagina,
     eliminarRegistro
   } = useRegistros();
+
+  const tieneFiltrosActivos = Boolean(
+    filtros?.search || filtros?.fechaInicio || filtros?.fechaFin || filtros?.empleadoId || filtros?.tipo
+  );
 
   // ========================================
   // EFECTOS
@@ -163,7 +172,8 @@ const RegistrosPage = () => {
   const clearFilters = () => {
     setFiltros({
       search: '',
-      fecha: null,
+      fechaInicio: '',
+      fechaFin: '',
       empleadoId: '',
       tipo: '',
       pagina: 1
@@ -307,7 +317,8 @@ const RegistrosPage = () => {
             <RegistroCalendario
               registros={registros}
               onSelectDate={(date) => {
-                setFiltros({ ...filtros, fecha: date });
+                const selected = new Date(date).toISOString().split('T')[0];
+                setFiltros({ ...filtros, fechaInicio: selected, fechaFin: selected, pagina: 1 });
                 setViewMode('table');
                 setShowFilters(true);
               }}
@@ -319,28 +330,66 @@ const RegistrosPage = () => {
 
       {/* Mensaje cuando no hay registros */}
       {!loading && !error && registros.length === 0 && (
-        <Card>
-          <div className="text-center py-12">
-            <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No hay registros para mostrar
+        <Card className="overflow-hidden rounded-[30px] border border-slate-200 shadow-sm">
+          <div className="bg-gradient-to-br from-white via-slate-50 to-blue-50 px-6 py-12 text-center">
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-blue-200 bg-white shadow-sm">
+              <Calendar className="h-8 w-8 text-blue-500" />
+            </div>
+            <h3 className="text-xl font-semibold text-slate-900">
+              {tieneFiltrosActivos ? 'No se encontraron registros en este rango' : 'Todavia no hay registros disponibles'}
             </h3>
-            <p className="text-gray-500 mb-6">
-              Comienza importando un archivo Excel o creando un registro manual
+            <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-500">
+              {tieneFiltrosActivos
+                ? 'Prueba ajustando el rango de fechas, cambiando el tipo de registro o limpiando los filtros para ver mas resultados.'
+                : 'Cuando importes datos desde Excel o crees registros manuales, apareceran aqui con su detalle y calculos asociados.'}
             </p>
-            <div className="flex justify-center space-x-4">
-              <Button
-                variant="outline"
-                onClick={() => navigate('/importacion')}
-              >
-                Importar Excel
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handleNuevoRegistro}
-              >
-                Nuevo Registro Manual
-              </Button>
+
+            {tieneFiltrosActivos && (
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-sm">
+                {filtros.fechaInicio && (
+                  <span className="rounded-full border border-blue-200 bg-white px-3 py-1 text-blue-700">
+                    Desde: {formatDateLabel(filtros.fechaInicio)}
+                  </span>
+                )}
+                {filtros.fechaFin && (
+                  <span className="rounded-full border border-cyan-200 bg-white px-3 py-1 text-cyan-700">
+                    Hasta: {formatDateLabel(filtros.fechaFin)}
+                  </span>
+                )}
+                {filtros.tipo && (
+                  <span className="rounded-full border border-violet-200 bg-white px-3 py-1 text-violet-700">
+                    Tipo: {filtros.tipo}
+                  </span>
+                )}
+              </div>
+            )}
+
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              {tieneFiltrosActivos ? (
+                <>
+                  <Button variant="outline" onClick={clearFilters}>
+                    Limpiar filtros
+                  </Button>
+                  <Button variant="primary" onClick={handleRefresh}>
+                    Volver a cargar
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/importacion')}
+                  >
+                    Importar Excel
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={handleNuevoRegistro}
+                  >
+                    Nuevo Registro Manual
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </Card>
@@ -358,7 +407,7 @@ const RegistrosPage = () => {
       />
 
       {/* Resumen de filtros activos */}
-      {(filtros.search || filtros.fecha || filtros.empleadoId || filtros.tipo) && (
+      {tieneFiltrosActivos && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center justify-between">
           <div className="flex items-center space-x-2 flex-wrap">
             <span className="text-sm text-blue-700 font-medium">Filtros activos:</span>
@@ -367,9 +416,14 @@ const RegistrosPage = () => {
                 Búsqueda: {filtros.search}
               </span>
             )}
-            {filtros.fecha && (
+            {filtros.fechaInicio && (
               <span className="bg-white px-2 py-1 rounded text-xs text-blue-600 border border-blue-200">
-                Fecha: {new Date(filtros.fecha).toLocaleDateString()}
+                Desde: {formatDateLabel(filtros.fechaInicio)}
+              </span>
+            )}
+            {filtros.fechaFin && (
+              <span className="bg-white px-2 py-1 rounded text-xs text-blue-600 border border-blue-200">
+                Hasta: {formatDateLabel(filtros.fechaFin)}
               </span>
             )}
             {filtros.empleadoId && (

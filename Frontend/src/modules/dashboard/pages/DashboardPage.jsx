@@ -4,7 +4,9 @@ import {
   RefreshCw, 
   Calendar, 
   Download,
-  AlertCircle
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useDashboardData } from '../hooks/useDashboardData';
 import SummaryCards from '../components/SummaryCards';
@@ -12,8 +14,44 @@ import HorasExtrasChart from '../components/HorasExtrasChart';
 import TopEmpleados from '../components/TopEmpleados';
 import UltimasImportaciones from '../components/UltimasImportaciones';
 import AlertasLimite from '../components/AlertasLimite';
-import { Button, Card, Spinner, Alert, DatePicker } from '../../../components/common';
+import { Button, Card, Spinner, Alert } from '../../../components/common';
 import { useUIStore } from '../../../store';
+
+// ============================================
+// SELECTOR DE MES/AÑO
+// ============================================
+const MESES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
+const MonthYearSelector = ({ value, onChange }) => {
+  const mes = value.getMonth();
+  const anio = value.getFullYear();
+
+  const prev = () => {
+    const d = new Date(anio, mes - 1, 1);
+    onChange(d);
+  };
+  const next = () => {
+    const d = new Date(anio, mes + 1, 1);
+    onChange(d);
+  };
+
+  return (
+    <div className="flex items-center space-x-2 bg-white border border-gray-300 rounded-lg px-3 py-2">
+      <button type="button" onClick={prev} className="p-1 hover:bg-gray-100 rounded">
+        <ChevronLeft size={16} />
+      </button>
+      <span className="text-sm font-medium text-gray-700 min-w-[140px] text-center">
+        {MESES[mes]} {anio}
+      </span>
+      <button type="button" onClick={next} className="p-1 hover:bg-gray-100 rounded">
+        <ChevronRight size={16} />
+      </button>
+    </div>
+  );
+};
 
 // ============================================
 // PÁGINA PRINCIPAL DEL DASHBOARD
@@ -100,15 +138,10 @@ const DashboardPage = () => {
 
         <div className="flex items-center space-x-3 w-full md:w-auto">
           {/* Selector de mes */}
-          <div className="w-48">
-            <DatePicker
-              selected={selectedMonth}
-              onChange={handleMonthChange}
-              dateFormat="MM/yyyy"
-              showMonthYearPicker
-              placeholderText="Seleccionar mes"
-            />
-          </div>
+          <MonthYearSelector
+            value={selectedMonth}
+            onChange={handleMonthChange}
+          />
 
           {/* Botón de actualizar */}
           <Button
@@ -172,6 +205,7 @@ const DashboardPage = () => {
               <HorasExtrasChart 
                 data={data.horasPorTipo}
                 loading={loading}
+                tieneQuincenas={data.resumen?.tieneQuincenas}
               />
             </div>
 
@@ -181,6 +215,7 @@ const DashboardPage = () => {
                 empleados={data.topEmpleados}
                 loading={loading}
                 onVerTodos={() => navigate('/empleados')}
+                tieneQuincenas={data.resumen?.tieneQuincenas}
               />
             </div>
           </div>

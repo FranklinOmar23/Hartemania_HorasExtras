@@ -1,6 +1,7 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { CheckCircle, AlertCircle, Info, AlertTriangle, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { useUIStore } from '../../store';
 
 // ============================================
 // CONTEXTO DE TOAST
@@ -93,8 +94,8 @@ const ToastItem = ({
   return (
     <div
       className={`
-        ${bgColor} border-l-4 ${borderColor} rounded-md p-4 shadow-lg mb-3
-        transform transition-all duration-300 ease-in-out
+        ${bgColor} ${borderColor} rounded-2xl border p-4 shadow-2xl shadow-slate-900/10 backdrop-blur-sm mb-3
+        transform transition-all duration-300 ease-out
         ${isExiting ? 'translate-x-full opacity-0' : 'translate-x-0 opacity-100'}
       `}
       role="alert"
@@ -102,18 +103,20 @@ const ToastItem = ({
       <div className="flex items-start">
         {/* Icono */}
         <div className="flex-shrink-0">
-          <Icon className={`h-5 w-5 ${iconColor}`} />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/80 shadow-sm">
+            <Icon className={`h-5 w-5 ${iconColor}`} />
+          </div>
         </div>
 
         {/* Contenido */}
         <div className="ml-3 flex-1">
           {title && (
-            <h3 className={`text-sm font-medium ${textColor}`}>
+            <h3 className={`text-sm font-semibold ${textColor}`}>
               {title}
             </h3>
           )}
           {message && (
-            <div className={`text-sm ${textColor} ${title ? 'mt-1' : ''}`}>
+            <div className={`text-sm ${textColor} ${title ? 'mt-1' : ''} opacity-90`}>
               <p>{message}</p>
             </div>
           )}
@@ -135,8 +138,12 @@ const ToastItem = ({
 // TOAST CONTAINER
 // ============================================
 const ToastContainer = ({ toasts, removeToast }) => {
+  if (!toasts.length) {
+    return null;
+  }
+
   return createPortal(
-    <div className="fixed top-4 right-4 z-50 w-96">
+    <div className="fixed right-4 top-4 z-[100] w-[min(92vw,24rem)]">
       {toasts.map((toast) => (
         <ToastItem
           key={toast.id}
@@ -151,6 +158,13 @@ const ToastContainer = ({ toasts, removeToast }) => {
     </div>,
     document.body
   );
+};
+
+const StoreToastContainer = () => {
+  const toasts = useUIStore((state) => state.toasts);
+  const removeToast = useUIStore((state) => state.removeToast);
+
+  return <ToastContainer toasts={toasts} removeToast={removeToast} />;
 };
 
 // ============================================
@@ -236,6 +250,7 @@ export const ToastProvider = ({ children }) => {
     >
       {children}
       <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <StoreToastContainer />
     </ToastContext.Provider>
   );
 };

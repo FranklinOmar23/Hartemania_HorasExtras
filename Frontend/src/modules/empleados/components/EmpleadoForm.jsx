@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Save, X } from 'lucide-react';
 import { Input, Button } from '../../../components/common';
+import { formatearMoneda } from '../../../utils';
 import { validarCedula, validarTelefono } from '../../../utils/validators';
 
 // ============================================

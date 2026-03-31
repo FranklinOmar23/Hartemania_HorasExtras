@@ -207,14 +207,15 @@ const CalculosPage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="rounded-[30px] border border-slate-200 bg-gradient-to-r from-white via-white to-emerald-50 px-6 py-6 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Cálculo de Horas Extras</h1>
           <p className="text-gray-500 mt-1">
             Calcula las horas extras por quincena según el código de trabajo
           </p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-wrap gap-3">
           <Button
             variant="outline"
             onClick={() => setShowConfig(!showConfig)}
@@ -231,10 +232,11 @@ const CalculosPage = () => {
             Calcular Quincena
           </Button>
         </div>
+        </div>
       </div>
 
       {/* Formulario de período */}
-      <Card>
+      <Card className="rounded-[30px] border border-slate-200 shadow-sm">
         <CalculoForm
           periodo={selectedPeriodo}
           onChange={setSelectedPeriodo}
@@ -245,7 +247,7 @@ const CalculosPage = () => {
 
       {/* Panel de configuración */}
       {showConfig && (
-        <Card title="Configuración del Cálculo">
+        <Card title="Configuración del Cálculo" className="rounded-[30px] border border-slate-200 shadow-sm">
           <CalculoConfigPanel />
         </Card>
       )}
@@ -265,14 +267,14 @@ const CalculosPage = () => {
       ) : resultados ? (
         <>
           {/* Tabs */}
-          <div className="border-b border-gray-200">
+          <div className="rounded-[24px] border border-slate-200 bg-white px-4 shadow-sm">
             <nav className="-mb-px flex space-x-8">
               {tabs.map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`
-                    py-2 px-1 border-b-2 font-medium text-sm flex items-center
+                    py-3 px-1 border-b-2 font-medium text-sm flex items-center transition-colors
                     ${activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -334,7 +336,7 @@ const CalculosPage = () => {
           )}
         </>
       ) : (
-        <Card>
+        <Card className="rounded-[30px] border border-slate-200 shadow-sm">
           <div className="text-center py-12">
             <Calculator className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">

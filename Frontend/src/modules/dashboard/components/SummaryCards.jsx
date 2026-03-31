@@ -16,14 +16,13 @@ import { formatearMoneda, formatearHoras } from '../../../utils';
 // ============================================
 
 const SummaryCards = ({ data, periodo }) => {
-  // ========================================
-  // CONFIGURACIÓN DE TARJETAS
-  // ========================================
-  const cards = [
+  const tieneQuincenas = data?.tieneQuincenas;
+
+  const cards = tieneQuincenas ? [
     {
       title: 'Total Horas Extras',
       value: formatearHoras(data?.totalHoras || 0),
-      subtitle: `${data?.empleadosConHE || 0} empleados`,
+      subtitle: `${data?.empleadosConHE || 0} empleados con HE`,
       icon: Clock,
       color: 'bg-blue-50',
       textColor: 'text-blue-600',
@@ -51,14 +50,55 @@ const SummaryCards = ({ data, periodo }) => {
       borderColor: 'border-purple-200'
     },
     {
-      title: 'Días con HE',
+      title: 'Dias con HE',
       value: data?.diasConHE || 0,
-      subtitle: `de ${data?.diasLaborables || 22} días laborables`,
+      subtitle: `de ${data?.diasLaborables || 22} dias laborables`,
       icon: Calendar,
       color: 'bg-yellow-50',
       textColor: 'text-yellow-600',
       iconColor: 'text-yellow-500',
       borderColor: 'border-yellow-200'
+    }
+  ] : [
+    {
+      title: 'Total Registros',
+      value: data?.totalRegistros || 0,
+      subtitle: `${data?.empleadosConRegistros || 0} empleados con registros`,
+      icon: Clock,
+      color: 'bg-blue-50',
+      textColor: 'text-blue-600',
+      iconColor: 'text-blue-500',
+      borderColor: 'border-blue-200'
+    },
+    {
+      title: 'Dias con Registros',
+      value: data?.diasConRegistros || 0,
+      subtitle: 'Pendiente de calculo',
+      icon: Calendar,
+      color: 'bg-yellow-50',
+      textColor: 'text-yellow-600',
+      iconColor: 'text-yellow-500',
+      borderColor: 'border-yellow-200'
+    },
+    {
+      title: 'Empleados Activos',
+      value: data?.empleadosActivos || 0,
+      subtitle: `${data?.empleadosConRegistros || 0} con registros`,
+      icon: Users,
+      color: 'bg-purple-50',
+      textColor: 'text-purple-600',
+      iconColor: 'text-purple-500',
+      borderColor: 'border-purple-200'
+    },
+    {
+      title: 'Estado',
+      value: 'Sin calcular',
+      subtitle: 'Ejecute calculo de quincena',
+      icon: AlertTriangle,
+      color: 'bg-orange-50',
+      textColor: 'text-orange-600',
+      iconColor: 'text-orange-500',
+      borderColor: 'border-orange-200'
     }
   ];
 

@@ -3,6 +3,58 @@ import { body, param, query } from 'express-validator';
 import { TIPOS_REGISTRO, REGEX } from '../utils/constants.js';
 
 class RegistroManualValidation {
+  listarTodos() {
+    return [
+      query('pagina')
+        .optional()
+        .isInt({ min: 1 }).withMessage('pagina debe ser un entero positivo')
+        .toInt(),
+
+      query('limite')
+        .optional()
+        .isInt({ min: 1, max: 100 }).withMessage('limite debe estar entre 1 y 100')
+        .toInt(),
+
+      query('fecha')
+        .optional()
+        .matches(REGEX.FECHA).withMessage('Formato de fecha inválido (YYYY-MM-DD)'),
+
+      query('fechaInicio')
+        .optional()
+        .matches(REGEX.FECHA).withMessage('Formato de fecha inicio inválido (YYYY-MM-DD)'),
+
+      query('fechaFin')
+        .optional()
+        .matches(REGEX.FECHA).withMessage('Formato de fecha fin inválido (YYYY-MM-DD)')
+        .custom((value, { req }) => {
+          if (req.query.fechaInicio && value) {
+            const inicio = new Date(req.query.fechaInicio);
+            const fin = new Date(value);
+
+            if (fin < inicio) {
+              throw new Error('La fecha fin debe ser posterior o igual a la fecha inicio');
+            }
+          }
+
+          return true;
+        }),
+
+      query('tipo')
+        .optional()
+        .isIn(Object.values(TIPOS_REGISTRO)).withMessage('Tipo de registro inválido'),
+
+      query('search')
+        .optional()
+        .isLength({ max: 100 }).withMessage('La búsqueda no puede exceder 100 caracteres')
+        .trim(),
+
+      query('empleadoId')
+        .optional()
+        .isLength({ max: 100 }).withMessage('El filtro de empleado no puede exceder 100 caracteres')
+        .trim()
+    ];
+  }
+
   /**
    * Validación para crear registro manual
    */

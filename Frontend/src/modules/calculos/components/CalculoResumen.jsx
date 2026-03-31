@@ -65,9 +65,9 @@ const CalculoResumen = ({ totales, loading }) => {
   return (
     <div className="space-y-6">
       {/* Tarjetas principales */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {tarjetas.map((tarjeta, idx) => (
-          <div key={idx} className={`${tarjeta.color} rounded-lg p-6`}>
+          <div key={idx} className={`${tarjeta.color} rounded-[28px] border border-white/70 p-6 shadow-sm`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm ${tarjeta.textColor} mb-1`}>
@@ -84,9 +84,9 @@ const CalculoResumen = ({ totales, loading }) => {
       </div>
 
       {/* Desglose por tipo */}
-      <Card title="Desglose por Tipo de Hora Extra">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="border border-blue-200 rounded-lg p-4">
+      <Card title="Desglose por Tipo de Hora Extra" className="rounded-[30px] border border-slate-200 shadow-sm">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="rounded-2xl border border-blue-200 bg-blue-50/40 p-4">
             <p className="text-sm text-blue-600 mb-1">HE 35%</p>
             <p className="text-xl font-bold text-gray-900">
               {formatearHoras(totales.horas35 || 0)}
@@ -96,7 +96,7 @@ const CalculoResumen = ({ totales, loading }) => {
             </p>
           </div>
 
-          <div className="border border-green-200 rounded-lg p-4">
+          <div className="rounded-2xl border border-green-200 bg-green-50/40 p-4">
             <p className="text-sm text-green-600 mb-1">HE 100%</p>
             <p className="text-xl font-bold text-gray-900">
               {formatearHoras(totales.horas100 || 0)}
@@ -106,7 +106,7 @@ const CalculoResumen = ({ totales, loading }) => {
             </p>
           </div>
 
-          <div className="border border-yellow-200 rounded-lg p-4">
+          <div className="rounded-2xl border border-yellow-200 bg-yellow-50/40 p-4">
             <p className="text-sm text-yellow-600 mb-1">HE 15%</p>
             <p className="text-xl font-bold text-gray-900">
               {formatearHoras(totales.horas15 || 0)}
@@ -116,7 +116,7 @@ const CalculoResumen = ({ totales, loading }) => {
             </p>
           </div>
 
-          <div className="border border-red-200 rounded-lg p-4">
+          <div className="rounded-2xl border border-red-200 bg-red-50/40 p-4">
             <p className="text-sm text-red-600 mb-1">HE Feriado</p>
             <p className="text-xl font-bold text-gray-900">
               {formatearHoras(totales.horasFeriado || 0)}
@@ -129,8 +129,8 @@ const CalculoResumen = ({ totales, loading }) => {
       </Card>
 
       {/* Estadísticas adicionales */}
-      <Card title="Estadísticas">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <Card title="Estadísticas" className="rounded-[30px] border border-slate-200 shadow-sm">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <div>
             <p className="text-sm text-gray-500">Empleados con HE</p>
             <p className="text-2xl font-bold text-gray-900">

@@ -6,6 +6,12 @@ import RegistroManualController from '../controllers/RegistroManualController.js
 
 const router = Router();
 
+router.get(
+  '/',
+  validate(registroManualValidation.listarTodos()),
+  RegistroManualController.listarTodos
+);
+
 /**
  * @swagger
  * tags:

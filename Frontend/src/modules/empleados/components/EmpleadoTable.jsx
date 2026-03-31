@@ -143,7 +143,7 @@ const EmpleadoTable = ({
         onSelectAll={handleSelectAll}
         onSelectRow={handleSelectRow}
         emptyMessage="No hay empleados para mostrar"
-        onRowClick={onVerDetalle}
+        onRowClick={(row) => onVerDetalle(row.id)}
       />
 
       {paginacion && (

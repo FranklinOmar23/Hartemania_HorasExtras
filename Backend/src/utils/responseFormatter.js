@@ -124,18 +124,24 @@ class ResponseFormatter {
    * Formatear respuesta de importación
    */
   importResult(result) {
+    const totalExitosos = result.exitosos?.length || 0;
+    const totalErrores = result.errores?.length || 0;
+    const duplicados = (result.errores || []).filter(e => e.error && e.error.includes('Ya existe')).length;
+
     return {
       success: true,
       data: {
+        id: result.importacion?.Id || result.importacion?.id,
+        fecha: result.importacion?.FechaCreacion || new Date().toISOString(),
+        totalRegistros: totalExitosos + totalErrores,
+        registrosValidos: totalExitosos,
+        registrosError: totalErrores,
+        duplicados,
+        mensaje: `Se procesaron ${totalExitosos + totalErrores} registros: ${totalExitosos} exitosos, ${totalErrores} errores`,
         importacion: result.importacion,
-        exitosos: result.exitosos?.length || 0,
-        errores: result.errores?.length || 0,
-        detalles: {
-          exitosos: result.exitosos,
-          errores: result.errores
-        }
+        errores: result.errores
       },
-      message: `Importación completada con ${result.exitosos?.length || 0} exitosos y ${result.errores?.length || 0} errores`,
+      message: `Importacion completada con ${totalExitosos} exitosos y ${totalErrores} errores`,
       timestamp: new Date().toISOString()
     };
   }

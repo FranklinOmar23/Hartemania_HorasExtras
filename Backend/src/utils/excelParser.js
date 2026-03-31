@@ -67,6 +67,20 @@ class ExcelParser {
       console.log(`✅ Registros extraídos: ${registros.length}`);
       console.log('Primer registro:', registros[0]);
 
+      // Diagnostico: fechas unicas y registros por empleado
+      const fechasUnicas = [...new Set(registros.map(r => r.fecha))].sort();
+      const porEmpleado = {};
+      for (const r of registros) {
+        porEmpleado[r.codigo] = (porEmpleado[r.codigo] || 0) + 1;
+      }
+      console.log(`📅 Fechas unicas en Excel (${fechasUnicas.length}):`, fechasUnicas);
+      console.log(`👥 Registros por empleado:`, porEmpleado);
+      // Buscar Abraham especificamente
+      const abraham = registros.filter(r => r.nombre && r.nombre.includes('ABRAHAM'));
+      if (abraham.length > 0) {
+        console.log(`🔍 ABRAHAM fechas:`, abraham.map(r => `${r.fecha} ${r.horaEntrada}-${r.horaSalida}`));
+      }
+
       return {
         filename,
         metadatos: { 
@@ -85,19 +99,36 @@ class ExcelParser {
 
   _parseFecha(valor) {
     if (!valor || valor === '--' || valor === '') return null;
-    
-    // Formato "2026-02-02"
-    if (typeof valor === 'string') {
-      const match = valor.match(/(\d{4}-\d{2}-\d{2})/);
-      if (match) return match[1];
+
+    // Si es Date object (por si xlsx devuelve objetos Date)
+    if (valor instanceof Date) {
+      return moment.utc(valor).format('YYYY-MM-DD');
     }
-    
-    // Si es número de Excel
+
+    // Si es numero de Excel (serial date)
     if (typeof valor === 'number') {
-      const date = new Date((valor - 25569) * 86400 * 1000);
-      return moment(date).format('YYYY-MM-DD');
+      const ms = (valor - 25569) * 86400 * 1000;
+      return moment.utc(ms).format('YYYY-MM-DD');
     }
-    
+
+    // Si es string, probar multiples formatos
+    if (typeof valor === 'string') {
+      const str = valor.trim();
+
+      // YYYY-MM-DD
+      const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+
+      // DD/MM/YYYY o D/M/YYYY
+      const dmy = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+      if (dmy) {
+        const dia = dmy[1].padStart(2, '0');
+        const mes = dmy[2].padStart(2, '0');
+        const anio = dmy[3];
+        return `${anio}-${mes}-${dia}`;
+      }
+    }
+
     return null;
   }
 

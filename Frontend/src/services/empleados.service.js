@@ -1,240 +1,117 @@
 import { get, post, put, del } from './api';
 
-// ============================================
-// SERVICIO DE EMPLEADOS
-// CRUD completo para empleados
-// ============================================
-
 const BASE_URL = '/empleados';
+const REPORTES_URL = '/reportes';
+
+const formatDate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getQuarterStart = () => {
+  const now = new Date();
+  const quarterMonth = Math.floor(now.getMonth() / 3) * 3;
+  return new Date(now.getFullYear(), quarterMonth, 1);
+};
+
+const normalizarPaginacion = (response) => {
+  const payload = response.data;
+  const pagination = payload.pagination || {};
+
+  return {
+    data: payload.data || [],
+    total: pagination.total || payload.total || 0,
+    totalPaginas: pagination.pages || payload.totalPaginas || 1,
+    pagina: pagination.page || payload.pagina || 1,
+    hasNext: pagination.hasNext || false
+  };
+};
 
 export const empleadosService = {
-  // ========================================
-  // OBTENER TODOS LOS EMPLEADOS
-  // ========================================
   obtenerTodos: async (filtros = {}) => {
-    try {
-      const response = await get(BASE_URL, filtros);
-      return {
-        data: response.data.data || response.data,
-        total: response.data.total || response.data.length,
-        totalPaginas: response.data.totalPaginas || 1,
-        pagina: response.data.pagina || 1
-      };
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // ========================================
-  // OBTENER TODOS LOS EMPLEADOS (SIN PAGINACIÓN)
-  // ========================================
- // ========================================
-// OBTENER TODOS LOS EMPLEADOS
-// ========================================
-obtenerTodos: async (filtros = {}) => {
-  try {
     const response = await get(BASE_URL, filtros);
-    
-    console.log('Respuesta completa:', response.data); // Para debug
-    
-    // ✅ LA ESTRUCTURA CORRECTA SEGÚN TU LOG:
-    // response.data = {
-    //   success: true,
-    //   data: [...],           ← Los empleados están aquí
-    //   pagination: {           ← La paginación está aquí
-    //     total: 34,
-    //     page: 1,
-    //     limit: 20,
-    //     pages: 2,
-    //     hasNext: true
-    //   },
-    //   message: "..."
-    // }
-    
-    return {
-      data: response.data.data || [],                    // Los empleados
-      total: response.data.pagination?.total || 0,       // Total de registros
-      totalPaginas: response.data.pagination?.pages || 1, // Total de páginas
-      pagina: response.data.pagination?.page || 1,        // Página actual
-      hasNext: response.data.pagination?.hasNext || false
-    };
-  } catch (error) {
-    console.error('Error en obtenerTodos:', error);
-    return {
-      data: [],
-      total: 0,
-      totalPaginas: 1,
-      pagina: 1,
-      hasNext: false
-    };
-  }
-},
+    return normalizarPaginacion(response);
+  },
 
-  // ========================================
-  // OBTENER EMPLEADO POR ID
-  // ========================================
+  obtenerTodosActivos: async () => {
+    const response = await get(`${BASE_URL}/todos`);
+    return response.data.data || response.data || [];
+  },
+
   obtenerPorId: async (id) => {
-    try {
-      const response = await get(`${BASE_URL}/${id}`);
-      return response.data.data || response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await get(`${BASE_URL}/${id}`);
+    return response.data.data || response.data;
   },
 
-  // ========================================
-  // OBTENER EMPLEADO POR CÓDIGO
-  // ========================================
   obtenerPorCodigo: async (codigo) => {
-    try {
-      const response = await get(`${BASE_URL}/codigo/${codigo}`);
-      return response.data.data || response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await get(`${BASE_URL}/codigo/${codigo}`);
+    return response.data.data || response.data;
   },
 
-  // ========================================
-  // CREAR NUEVO EMPLEADO
-  // ========================================
   crear: async (empleadoData) => {
-    try {
-      const response = await post(BASE_URL, empleadoData);
-      return response.data.data || response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await post(BASE_URL, empleadoData);
+    return response.data.data || response.data;
   },
 
-  // ========================================
-  // ACTUALIZAR EMPLEADO
-  // ========================================
   actualizar: async (id, empleadoData) => {
-    try {
-      const response = await put(`${BASE_URL}/${id}`, empleadoData);
-      return response.data.data || response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await put(`${BASE_URL}/${id}`, empleadoData);
+    return response.data.data || response.data;
   },
 
-  // ========================================
-  // ELIMINAR EMPLEADO (SOFT DELETE)
-  // ========================================
   eliminar: async (id) => {
-    try {
-      const response = await del(`${BASE_URL}/${id}`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await del(`${BASE_URL}/${id}`);
+    return response.data;
   },
 
-  // ========================================
-  // ELIMINAR MÚLTIPLES EMPLEADOS
-  // ========================================
-  eliminarMultiples: async (ids) => {
-    try {
-      const response = await post(`${BASE_URL}/eliminar-multiples`, { ids });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // ========================================
-  // BUSCAR EMPLEADOS
-  // ========================================
   buscar: async (termino, filtros = {}) => {
-    try {
-      const response = await get(`${BASE_URL}/buscar`, {
-        q: termino,
-        ...filtros
-      });
-      return {
-        data: response.data.data || response.data,
-        total: response.data.total || response.data.length
-      };
-    } catch (error) {
-      throw error;
-    }
+    const response = await get(`${BASE_URL}/buscar`, {
+      q: termino,
+      ...filtros
+    });
+
+    return {
+      data: response.data.data || response.data || [],
+      total: response.data.pagination?.total || response.data.total || 0
+    };
   },
 
-  // ========================================
-  // OBTENER EMPLEADOS ACTIVOS
-  // ========================================
-  obtenerActivos: async () => {
-    try {
-      const response = await get(`${BASE_URL}/activos`);
-      return response.data.data || response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
+  obtenerEstadisticas: async (id) => {
+    const now = new Date();
+    const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
+    const inicioTrimestre = getQuarterStart();
+    const inicioHistorico = new Date(2020, 0, 1);
+    const fechaFin = formatDate(now);
 
-  // ========================================
-  // OBTENER EMPLEADOS INACTIVOS
-  // ========================================
-  obtenerInactivos: async () => {
-    try {
-      const response = await get(`${BASE_URL}/inactivos`);
-      return response.data.data || response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
+    const [reporteMes, reporteTrimestre, reporteHistorico] = await Promise.all([
+      get(`${REPORTES_URL}/empleado/${id}`, {
+        fechaInicio: formatDate(inicioMes),
+        fechaFin,
+        formato: 'json'
+      }),
+      get(`${REPORTES_URL}/empleado/${id}`, {
+        fechaInicio: formatDate(inicioTrimestre),
+        fechaFin,
+        formato: 'json'
+      }),
+      get(`${REPORTES_URL}/empleado/${id}`, {
+        fechaInicio: formatDate(inicioHistorico),
+        fechaFin,
+        formato: 'json'
+      })
+    ]);
 
-  // ========================================
-  // OBTENER DEPARTAMENTOS ÚNICOS
-  // ========================================
-  obtenerDepartamentos: async () => {
-    try {
-      const response = await get(`${BASE_URL}/departamentos`);
-      return response.data.data || response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
+    const datosMes = reporteMes.data.data || reporteMes.data || {};
+    const datosTrimestre = reporteTrimestre.data.data || reporteTrimestre.data || {};
+    const datosHistorico = reporteHistorico.data.data || reporteHistorico.data || {};
 
-  // ========================================
-  // ACTIVAR EMPLEADO
-  // ========================================
-  activar: async (id) => {
-    try {
-      const response = await post(`${BASE_URL}/${id}/activar`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // ========================================
-  // DESACTIVAR EMPLEADO
-  // ========================================
-  desactivar: async (id) => {
-    try {
-      const response = await post(`${BASE_URL}/${id}/desactivar`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // ========================================
-  // EXPORTAR EMPLEADOS
-  // ========================================
-  exportar: async (formato = 'excel', filtros = {}) => {
-    try {
-      const response = await get(`${BASE_URL}/exportar`, {
-        formato,
-        ...filtros
-      }, {
-        responseType: 'blob'
-      });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    return {
+      horasMes: Number(datosMes.totales?.totalHoras || 0).toFixed(2),
+      horasTrimestre: Number(datosTrimestre.totales?.totalHoras || 0).toFixed(2),
+      horasTotal: Number(datosHistorico.totales?.totalHoras || 0).toFixed(2),
+      totalPagado: Number(datosHistorico.totales?.totalPagar || 0)
+    };
   }
 };
 

@@ -46,15 +46,23 @@ const ImportacionDetallePage = () => {
   const cargarDatos = async () => {
     setLoading(true);
     try {
-      const [impData, regData, errData] = await Promise.all([
-        obtenerImportacion(id),
+      const impData = await obtenerImportacion(id);
+      const [registrosResult, erroresResult] = await Promise.allSettled([
         obtenerRegistros(id),
         obtenerErrores(id)
       ]);
       
       setImportacion(impData);
-      setRegistros(regData || []);
-      setErrores(errData || []);
+      setRegistros(
+        registrosResult.status === 'fulfilled'
+          ? (registrosResult.value || [])
+          : (impData?.registros || [])
+      );
+      setErrores(
+        erroresResult.status === 'fulfilled'
+          ? (erroresResult.value || [])
+          : []
+      );
     } catch (error) {
       showToast({
         type: 'error',

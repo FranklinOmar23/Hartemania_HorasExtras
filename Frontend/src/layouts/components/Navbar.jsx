@@ -38,7 +38,7 @@ const Navbar = ({ onMenuClick, sidebarOpen }) => {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <nav className="bg-white border-b border-gray-200 px-4 py-3">
+    <nav className="sticky top-0 z-30 border-b border-white/70 bg-white/75 px-4 py-3 backdrop-blur-xl">
       <div className="flex items-center justify-between">
         {/* Izquierda */}
         <div className="flex items-center">
@@ -49,18 +49,27 @@ const Navbar = ({ onMenuClick, sidebarOpen }) => {
             <Menu size={24} />
           </button>
           
-          <h1 className="ml-2 lg:ml-0 text-xl font-semibold text-gray-800">
-            {getPageTitle()}
-          </h1>
+          <div className="ml-2 lg:ml-0">
+            <h1 className="text-xl font-semibold text-slate-900">
+              {getPageTitle()}
+            </h1>
+            <p className="hidden text-xs uppercase tracking-[0.22em] text-slate-400 md:block">
+              Hartemania Horas Extras
+            </p>
+          </div>
         </div>
 
         {/* Derecha */}
         <div className="flex items-center space-x-4">
+          <div className="hidden rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 md:block">
+            Operacion en vivo
+          </div>
+
           {/* Notificaciones */}
           <div className="relative">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-full relative"
+              className="relative rounded-full border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
             >
               <Bell size={20} />
               {unreadCount > 0 && (
@@ -72,10 +81,10 @@ const Navbar = ({ onMenuClick, sidebarOpen }) => {
 
             {/* Dropdown notificaciones */}
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+              <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-slate-200 bg-white/95 shadow-2xl shadow-slate-900/10 z-50 backdrop-blur">
                 <div className="py-2">
-                  <div className="px-4 py-2 border-b border-gray-200">
-                    <h3 className="text-sm font-semibold text-gray-900">
+                  <div className="border-b border-slate-100 px-4 py-3">
+                    <h3 className="text-sm font-semibold text-slate-900">
                       Notificaciones
                     </h3>
                   </div>
@@ -84,22 +93,22 @@ const Navbar = ({ onMenuClick, sidebarOpen }) => {
                       notifications.map(notif => (
                         <div
                           key={notif.id}
-                          className={`px-4 py-3 hover:bg-gray-50 cursor-pointer ${
-                            !notif.read ? 'bg-blue-50' : ''
+                          className={`cursor-pointer px-4 py-3 transition hover:bg-slate-50 ${
+                            !notif.read ? 'bg-emerald-50/70' : ''
                           }`}
                         >
-                          <p className="text-sm text-gray-900">{notif.text}</p>
-                          <p className="text-xs text-gray-500 mt-1">{notif.time}</p>
+                          <p className="text-sm text-slate-900">{notif.text}</p>
+                          <p className="mt-1 text-xs text-slate-500">{notif.time}</p>
                         </div>
                       ))
                     ) : (
-                      <div className="px-4 py-3 text-sm text-gray-500">
+                      <div className="px-4 py-3 text-sm text-slate-500">
                         No hay notificaciones
                       </div>
                     )}
                   </div>
-                  <div className="px-4 py-2 border-t border-gray-200">
-                    <button className="text-sm text-blue-600 hover:text-blue-800">
+                  <div className="border-t border-slate-100 px-4 py-3">
+                    <button className="text-sm font-medium text-emerald-700 hover:text-emerald-800">
                       Ver todas
                     </button>
                   </div>
@@ -112,38 +121,38 @@ const Navbar = ({ onMenuClick, sidebarOpen }) => {
           <div className="relative">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100"
+              className="flex items-center space-x-2 rounded-2xl border border-slate-200 bg-white px-2 py-1.5 transition hover:border-slate-300 hover:bg-slate-50"
             >
-              <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center text-white">
+              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-emerald-500 text-white shadow-sm">
                 <User size={16} />
               </div>
-              <span className="text-sm font-medium text-gray-700 hidden md:block">
+              <span className="hidden text-sm font-medium text-slate-700 md:block">
                 Admin User
               </span>
             </button>
 
             {/* Dropdown usuario */}
             {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+              <div className="absolute right-0 mt-2 w-48 rounded-2xl border border-slate-200 bg-white/95 shadow-2xl shadow-slate-900/10 z-50 backdrop-blur">
                 <div className="py-1">
                   <a
                     href="/perfil"
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                   >
                     <User size={16} className="mr-2" />
                     Mi Perfil
                   </a>
                   <a
                     href="/configuracion"
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                   >
                     <Settings size={16} className="mr-2" />
                     Configuración
                   </a>
-                  <hr className="my-1" />
+                  <hr className="my-1 border-slate-100" />
                   <button
                     onClick={() => console.log('Logout')}
-                    className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                    className="flex w-full items-center px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
                   >
                     <LogOut size={16} className="mr-2" />
                     Cerrar Sesión

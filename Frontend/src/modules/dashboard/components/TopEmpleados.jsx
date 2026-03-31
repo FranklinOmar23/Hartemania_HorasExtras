@@ -9,7 +9,7 @@ import { formatearMoneda, formatearHoras } from '../../../utils';
 // Lista de empleados con más horas extras
 // ============================================
 
-const TopEmpleados = ({ empleados = [], loading, onVerTodos }) => {
+const TopEmpleados = ({ empleados = [], loading, onVerTodos, tieneQuincenas }) => {
   const navigate = useNavigate();
 
   // ========================================
@@ -34,7 +34,7 @@ const TopEmpleados = ({ empleados = [], loading, onVerTodos }) => {
   return (
     <Card 
       title="Top Empleados" 
-      subtitle="Empleados con más horas extras este mes"
+      subtitle={tieneQuincenas ? 'Empleados con mas horas extras este mes' : 'Empleados con mas registros este mes'}
       headerAction={
         <Button variant="ghost" size="sm" onClick={onVerTodos}>
           Ver todos <ChevronRight size={16} className="ml-1" />
@@ -88,11 +88,13 @@ const TopEmpleados = ({ empleados = [], loading, onVerTodos }) => {
                   </p>
                   <div className="text-right">
                     <p className="text-sm font-semibold text-blue-600">
-                      {formatearHoras(emp.totalHoras)}
+                      {tieneQuincenas ? formatearHoras(emp.totalHoras) : `${emp.totalRegistros || 0} registros`}
                     </p>
-                    <p className="text-xs text-gray-500">
-                      {formatearMoneda(emp.totalPagar)}
-                    </p>
+                    {tieneQuincenas && (
+                      <p className="text-xs text-gray-500">
+                        {formatearMoneda(emp.totalPagar)}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

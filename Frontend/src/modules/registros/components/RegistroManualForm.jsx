@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Save, X, User, Calendar, Clock } from 'lucide-react';
-import { Input, Button, Select } from '../../../components/common';
+import { Save, X, Calendar, Clock, TimerReset } from 'lucide-react';
+import { Input, Button } from '../../../components/common';
 import { useEmpleados } from '../../empleados/hooks/useEmpleados';
 
 // ============================================
@@ -75,6 +75,10 @@ const RegistroManualForm = ({
   const horaEntrada = watch('horaEntrada');
   const horaSalida = watch('horaSalida');
   const empleadoId = watch('empleadoId');
+  const empleadoSeleccionado = useMemo(
+    () => empleados.find((emp) => String(emp.id) === String(empleadoId)),
+    [empleados, empleadoId]
+  );
 
   // Calcular horas trabajadas
   useEffect(() => {
@@ -118,14 +122,36 @@ const RegistroManualForm = ({
   // ========================================
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Tipo</p>
+          <p className="mt-2 text-base font-semibold text-slate-900">Registro manual</p>
+          <p className="mt-1 text-sm text-slate-500">Se integra al calculo de horas extras.</p>
+        </div>
+        <div className="rounded-[24px] border border-emerald-200 bg-emerald-50/80 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-500">Empleado</p>
+          <p className="mt-2 text-base font-semibold text-slate-900">
+            {empleadoSeleccionado ? `${empleadoSeleccionado.nombre} ${empleadoSeleccionado.apellido}` : 'Pendiente de seleccionar'}
+          </p>
+          <p className="mt-1 text-sm text-slate-500">
+            {empleadoSeleccionado ? empleadoSeleccionado.codigo : 'Selecciona el colaborador para continuar'}
+          </p>
+        </div>
+        <div className="rounded-[24px] border border-amber-200 bg-amber-50/80 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600">Estado</p>
+          <p className="mt-2 text-base font-semibold text-slate-900">{isEditing ? 'Edicion' : 'Nuevo registro'}</p>
+          <p className="mt-1 text-sm text-slate-500">Completa entrada y salida para cerrar el registro correctamente.</p>
+        </div>
+      </div>
+
       {/* Selección de empleado */}
-      <div>
+      <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Empleado <span className="text-red-500">*</span>
         </label>
         <select
           {...register('empleadoId')}
-          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className="block w-full rounded-2xl border-slate-300 bg-white px-4 py-3 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
         >
           <option value="">Seleccionar empleado...</option>
           {empleados.map(emp => (
@@ -139,36 +165,69 @@ const RegistroManualForm = ({
         )}
       </div>
 
-      {/* Fecha */}
-      <Input
-        label="Fecha *"
-        type="date"
-        {...register('fecha')}
-        error={errors.fecha?.message}
-        icon={Calendar}
-      />
+      <div className="grid gap-4 lg:grid-cols-[1.1fr_1.4fr]">
+        <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+          <Input
+            label="Fecha *"
+            type="date"
+            {...register('fecha')}
+            error={errors.fecha?.message}
+            icon={Calendar}
+          />
 
-      {/* Horas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input
-          label="Hora Entrada"
-          type="time"
-          {...register('horaEntrada')}
-          error={errors.horaEntrada?.message}
-          icon={Clock}
-        />
-        <Input
-          label="Hora Salida"
-          type="time"
-          {...register('horaSalida')}
-          error={errors.horaSalida?.message}
-          icon={Clock}
-        />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Input
+              label="Hora Entrada"
+              type="time"
+              {...register('horaEntrada')}
+              error={errors.horaEntrada?.message}
+              icon={Clock}
+            />
+            <Input
+              label="Hora Salida"
+              type="time"
+              {...register('horaSalida')}
+              error={errors.horaSalida?.message}
+              icon={Clock}
+            />
+          </div>
+        </div>
+
+        <div className="rounded-[24px] border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
+              <TimerReset size={20} />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-slate-900">Cierre del registro</h3>
+              <p className="text-sm text-slate-500">Verifica la jornada antes de guardar.</p>
+            </div>
+          </div>
+
+          <div className="space-y-3 text-sm text-slate-600">
+            <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 border border-slate-200">
+              <span>Empleado seleccionado</span>
+              <span className="font-medium text-slate-900">
+                {empleadoSeleccionado ? empleadoSeleccionado.codigo : 'Sin definir'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 border border-slate-200">
+              <span>Marcaciones completas</span>
+              <span className="font-medium text-slate-900">
+                {horaEntrada && horaSalida ? 'Si' : 'No'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 border border-slate-200">
+              <span>Tipo de origen</span>
+              <span className="font-medium text-slate-900">Manual</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Cálculos en tiempo real */}
       {calculos && (
-        <div className="bg-blue-50 p-4 rounded-lg">
+        <div className="rounded-[24px] border border-blue-200 bg-blue-50/80 p-5 shadow-sm">
           <h4 className="text-sm font-medium text-blue-800 mb-2">
             Vista previa del cálculo
           </h4>
@@ -193,14 +252,14 @@ const RegistroManualForm = ({
       )}
 
       {/* Comentarios */}
-      <div>
+      <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Comentarios
         </label>
         <textarea
           {...register('comentarios')}
           rows="3"
-          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className="block w-full rounded-2xl border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           placeholder="Observaciones adicionales..."
         />
       </div>
@@ -209,7 +268,7 @@ const RegistroManualForm = ({
       <input type="hidden" {...register('tipoRegistro')} value="MANUAL" />
 
       {/* Botones de acción */}
-      <div className="flex justify-end space-x-3 pt-4 border-t">
+      <div className="flex justify-end space-x-3 border-t border-slate-200 pt-4">
         <Button
           type="button"
           variant="outline"
@@ -230,7 +289,7 @@ const RegistroManualForm = ({
       </div>
 
       {/* Nota sobre registros manuales */}
-      <div className="bg-yellow-50 p-3 rounded-lg text-xs text-yellow-700">
+      <div className="rounded-[24px] border border-yellow-200 bg-yellow-50/90 p-4 text-xs text-yellow-700 shadow-sm">
         <p>
           <strong>Nota:</strong> Los registros manuales serán considerados para el cálculo de horas extras
           junto con las importaciones automáticas.
